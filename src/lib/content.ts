@@ -3,7 +3,42 @@ import categoriesData from '../data/categories.json';
 import articleCategoriesData from '../data/article-categories.json';
 import siteData from '../data/site.json';
 
-export const site = siteData;
+/**
+ * 站点配置的统一入口。
+ * 后台（Pages CMS）保存时会把空字段整行删掉，所以这里给每个字段兜底默认值，
+ * 少填一个字段不会导致构建失败或页面空白。
+ */
+export type SiteConfig = {
+  name: string;
+  brand: string;
+  tagline: string;
+  description: string;
+  author: string;
+  authorShort: string;
+  url: string;
+  repo: string;
+  email: string;
+  githubUser: string;
+  cmsUrl: string;
+  location: string;
+};
+
+const rawSite = siteData as Partial<SiteConfig>;
+
+export const site: SiteConfig = {
+  name: rawSite.name ?? 'AI 实践库',
+  brand: rawSite.brand ?? rawSite.name ?? 'AI 实践库',
+  tagline: rawSite.tagline ?? '让 AI 真正用起来',
+  description: rawSite.description ?? '',
+  author: rawSite.author ?? '',
+  authorShort: rawSite.authorShort ?? rawSite.author ?? '',
+  url: rawSite.url ?? 'https://sfkpdr.github.io',
+  repo: rawSite.repo ?? '',
+  email: rawSite.email ?? '',
+  githubUser: rawSite.githubUser ?? '',
+  cmsUrl: rawSite.cmsUrl ?? 'https://app.pagescms.org/',
+  location: rawSite.location ?? '',
+};
 
 export type TaskCategory = { id: string; name: string; description: string; icon: string; order: number };
 export type ArticleCategory = { id: string; name: string; description: string; order: number };
