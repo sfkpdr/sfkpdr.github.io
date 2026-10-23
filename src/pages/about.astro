@@ -60,7 +60,7 @@ const timeline = [
 
 <BaseLayout
   title="关于我"
-  description="杨生（杨孔穗），AIGC 内容创作者，专注 ComfyUI 工作流、开源生图与视频模型的本地实践。"
+  description={`${site.author}，AIGC 内容创作者，专注 ComfyUI 工作流、开源生图与视频模型的本地实践。`}
 >
   <section class="page-head">
     <div class="container">
@@ -78,7 +78,7 @@ const timeline = [
     <div class="about-grid" style="padding:34px 0 72px">
       <div>
         <div class="prose" style="max-width:none">
-          <h2 style="margin-top:0">我是杨生</h2>
+          <h2 style="margin-top:0">我是{site.authorShort}</h2>
           <p>
             2025 年初从传统行业转向 AIGC，零基础自学 AI 工具，主要折腾
             <strong>ComfyUI、开源生图模型与视频模型</strong>。到现在为止，能独立搭起文生图、图生图、
@@ -153,7 +153,7 @@ const timeline = [
 
       <aside class="about-side">
         <div class="about-card">
-          <h3>杨生（杨孔穗）</h3>
+          <h3>{site.author}</h3>
           <ul>
             <li><MapPin size={14} stroke-width={1.8} /> {site.location}</li>
             <li><Terminal size={14} stroke-width={1.8} /> AIGC 内容创作者</li>

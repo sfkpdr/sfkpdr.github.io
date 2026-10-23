@@ -58,6 +58,76 @@ media:
 
 content:
   # ---------------------------------------------------------------------------
+  # 0. 站点设置（站名、作者、联系方式都在这里改，改完网站全站生效）
+  # ---------------------------------------------------------------------------
+  - name: site
+    label: 站点设置
+    type: file
+    path: src/data/site.json
+    format: json
+    fields:
+      - name: name
+        label: 站点名称
+        type: string
+        required: true
+        description: 用于浏览器标签标题后缀与 SEO，例如「杨生的 AI 实践库」
+
+      - name: brand
+        label: 顶栏品牌名
+        type: string
+        required: true
+        description: 显示在网页左上角，建议 10 个字以内，例如「杨生 · AI 实践库」
+
+      - name: authorShort
+        label: 作者简称
+        type: string
+        description: 用于首页「我是 XX」与关于页标题，例如「杨生」
+
+      - name: author
+        label: 作者全名
+        type: string
+        required: true
+        description: 用于页脚版权、关于页侧栏，例如「杨生（杨孔穗）」
+
+      - name: tagline
+        label: 一句话定位
+        type: string
+        description: 例如「让 AI 真正用起来」
+
+      - name: description
+        label: 站点描述（SEO）
+        type: text
+        description: 出现在搜索结果与分享卡片里，建议 60–120 字
+
+      - name: location
+        label: 所在城市
+        type: string
+
+      - name: email
+        label: 联系邮箱
+        type: string
+        description: 留空则页脚不显示邮箱
+
+      - name: githubUser
+        label: GitHub 用户名
+        type: string
+
+      - name: repo
+        label: GitHub 仓库地址
+        type: string
+        description: 页脚的仓库链接与「使用说明」链接都读这里
+
+      - name: url
+        label: 站点地址
+        type: string
+        description: 用于 SEO 的 canonical 与分享链接，换域名时才改
+
+      - name: cmsUrl
+        label: 内容后台地址
+        type: string
+        description: /admin/ 页面按钮跳转的地址，一般不用改
+
+  # ---------------------------------------------------------------------------
   # 1. 提示词库（核心模块，优先维护）
   # ---------------------------------------------------------------------------
   - name: prompts
