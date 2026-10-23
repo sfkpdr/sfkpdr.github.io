@@ -39,14 +39,77 @@ import { site } from '../../lib/content';
       </a>
     </div>
 
-    <div class="grid grid--2" style="margin-top:24px">
+    <div class="panel" style="margin-top:24px">
+      <div class="panel__title"><span>新增一条提示词 · 五步</span></div>
+      <ol style="padding-left:1.3em;margin:0;font-size:0.92rem;line-height:2">
+        <li>后台左侧点 <strong>提示词库</strong> → 右上角 <strong>新增</strong></li>
+        <li>填 <strong>提示词标题</strong></li>
+        <li>点 <strong>生成效果图</strong> → 从相册选图上传（必填，一条提示词对应一张图）</li>
+        <li>
+          <strong>适用模型</strong>从下拉里选、<strong>任务分类</strong>选一个、标签按需加
+          （这三项决定它归到哪个分类，见下表）
+        </li>
+        <li><strong>完整提示词</strong>粘贴正文 → 发布状态选「已发布」→ <strong>保存</strong></li>
+      </ol>
+      <p class="small muted" style="margin:12px 0 0">
+        保存后不需要再做任何事：约 1–3 分钟自动构建，新条目会出现在提示词库、对应分类、搜索结果里。
+        只有「已发布」会公开，草稿只有你自己能看到。
+      </p>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel__title"><span>分类是怎么自动归类的</span></div>
+      <div class="prose" style="font-size:0.9rem">
+        <p style="margin-top:0">
+          分类不是另建一份目录，而是由你填的字段直接决定。选完保存，下面这些位置会自动更新：
+        </p>
+        <table>
+          <thead>
+            <tr><th>你填的字段</th><th>自动出现在哪里</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>任务分类</strong><br /><span class="muted">例如「人像摄影」</span></td>
+              <td>
+                提示词库左栏的分类筛选（<code>/prompts/?category=portrait</code>）、
+                首页「按任务分类的入口」。分类名与图标来自 <code>src/data/categories.json</code>，
+                某分类下没有内容时，筛选栏会自动隐藏它
+              </td>
+            </tr>
+            <tr>
+              <td><strong>适用模型</strong><br /><span class="muted">例如「Qwen-Image」</span></td>
+              <td>
+                模型详情页的「这个模型的提示词」列表、模型库的模型筛选；
+                该模型出现在提示词里，首页模型卡片的「N 条提示词」计数也会跟着变
+              </td>
+            </tr>
+            <tr>
+              <td><strong>标签</strong><br /><span class="muted">例如「人像 / 自然光」</span></td>
+              <td>
+                提示词库左栏的标签筛选项。标签是自由文本，<strong>不需要预先注册</strong>，
+                写一个新标签就会自动出现在筛选栏（卡片上只显示前两个）
+              </td>
+            </tr>
+            <tr>
+              <td><strong>发布状态</strong><br /><span class="muted">已发布 / 草稿</span></td>
+              <td>
+                已发布才会进入列表、详情页、全站搜索索引、RSS 与 sitemap；草稿完全不对外
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid grid--2" style="margin-top:18px">
       <div class="panel">
-        <div class="panel__title"><span>手机端三步走</span></div>
-        <ol style="padding-left:1.2em;margin:0;font-size:0.9rem;line-height:1.9">
-          <li>用手机浏览器打开 <a href={site.cmsUrl} target="_blank" rel="noopener noreferrer">app.pagescms.org</a></li>
-          <li>登录 GitHub，选择 <code>sfkpdr/sfkpdr.github.io</code> 仓库</li>
-          <li>左侧点「提示词库」→「新增提示词」，填标题、传图、粘贴提示词，保存</li>
-        </ol>
+        <div class="panel__title"><span>上传后去哪确认</span></div>
+        <ul style="padding-left:1.1em;margin:0;font-size:0.9rem;line-height:1.9">
+          <li><a href="/prompts/">提示词库列表</a>：看最新一条是否出现</li>
+          <li><a href="/prompts/?sort=oldest">最早更新排序</a>：确认它进了索引</li>
+          <li>GitHub → <a href={`${site.repo}/actions`} target="_blank" rel="noopener noreferrer">Actions</a>：构建是否变绿</li>
+          <li>手机浏览器建议下拉刷新，避免看到缓存</li>
+        </ul>
       </div>
 
       <div class="panel">

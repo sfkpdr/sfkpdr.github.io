@@ -186,6 +186,7 @@ content:
         label: 任务分类
         type: select
         required: true
+        description: 选完即自动归类：会进入提示词库左栏的对应分类、/prompts/?category=… 页面与首页分类入口，不需要再去别处登记
         options:
           values:
             - name: text-to-image
@@ -221,7 +222,7 @@ content:
         label: 标签
         type: string
         list: true
-        description: 每行一个，例如 人像 / 自然光 / 写实。标签会自动出现在筛选栏
+        description: 每行一个，例如 人像 / 自然光 / 写实。标签无需预先注册，写新的会自动出现在筛选栏
 
       - name: status
         label: 发布状态
