@@ -1,0 +1,272 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CopyButton from '../../components/CopyButton.astro';
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import ArrowRight from '@lucide/astro/icons/arrow-right';
+import Boxes from '@lucide/astro/icons/boxes';
+import FileText from '@lucide/astro/icons/file-text';
+import Workflow from '@lucide/astro/icons/workflow';
+import Check from '@lucide/astro/icons/circle-check';
+import Calendar from '@lucide/astro/icons/calendar';
+import Info from '@lucide/astro/icons/info';
+import {
+  getPrompts,
+  getModels,
+  getArticles,
+  getProjects,
+  categoryName,
+  formatDate,
+  parseParams,
+} from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const [prompts, models] = await Promise.all([getPrompts(), getModels()]);
+  const modelIndex = new Map(models.map((m) => [m.data.slug, m]));
+
+  return prompts.map((prompt) => ({
+    params: { id: prompt.id },
+    props: { prompt, model: modelIndex.get(prompt.data.model) },
+  }));
+}) satisfies GetStaticPaths;
+
+const { prompt, model } = Astro.props;
+const { Content } = await render(prompt);
+const d = prompt.data;
+
+const [articles, projects] = await Promise.all([getArticles(), getProjects()]);
+const relatedArticles = articles.filter((a) => d.relatedArticles.includes(a.id));
+const relatedProjects = projects.filter((p) => d.relatedProjects.includes(p.id));
+
+const paramRows = parseParams(d.params);
+const isSample = d.tags.includes('示例');
+---
+
+<BaseLayout
+  title={d.title}
+  description={`${d.title}：适用 ${model?.data.name ?? d.model}，完整提示词可一键复制。`}
+  image={d.image}
+  type="article"
+>
+  <div class="container">
+    <div style="padding-top:20px">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span>
+        <a href="/prompts/">提示词库</a> <span>/</span>
+        <span>{d.title}</span>
+      </nav>
+    </div>
+
+    <div class="detail">
+      <div>
+        <div class="detail__media">
+          <img src={d.image} alt={`${d.title} 的生成效果图`} width="1200" height="900" />
+        </div>
+
+        <div style="margin-top:26px">
+          <div class="chip-row" style="margin-bottom:10px">
+            <a class="chip" href={`/prompts/?model=${d.model}`}>
+              {model?.data.name ?? d.model}
+            </a>
+            <a class="chip chip--outline" href={`/prompts/?category=${d.category}`}>
+              {categoryName(d.category)}
+            </a>
+            {d.tested && (
+              <span class="chip chip--moss"><Check size={12} stroke-width={2.4} /> 已实测</span>
+            )}
+            {isSample && <span class="chip" style="color:var(--rust)">示例内容</span>}
+          </div>
+
+          <h1>{d.title}</h1>
+
+          {
+            isSample && (
+              <div class="notice notice--warm" style="margin-bottom:20px">
+                <Info size={16} stroke-width={1.8} />
+                <span>
+                  这是站内示例条目，用来演示数据结构与详情页效果，图片为占位示意图，不是真实测试结果。
+                  在后台把它替换成你自己的效果图与提示词即可。
+                </span>
+              </div>
+            )
+          }
+
+          <div class="panel" style="margin-bottom:18px">
+            <div class="panel__title">
+              <span>完整提示词</span>
+              <CopyButton text={d.prompt} label="复制提示词" copiedLabel="已复制" variant="primary" />
+            </div>
+            <div class="prompt-box prompt-box--full">{d.prompt}</div>
+          </div>
+
+          {
+            d.negative && (
+              <div class="panel" style="margin-bottom:18px">
+                <div class="panel__title">
+                  <span>负向提示词</span>
+                  <CopyButton text={d.negative} label="复制负向词" copiedLabel="已复制" />
+                </div>
+                <div class="prompt-box">{d.negative}</div>
+              </div>
+            )
+          }
+
+          {
+            paramRows.length > 0 && (
+              <div class="panel" style="margin-bottom:18px">
+                <div class="panel__title">
+                  <span>生成参数</span>
+                  <CopyButton
+                    text={paramRows.map((row) => `${row.key}: ${row.value}`).join('\n')}
+                    label="复制参数"
+                    copiedLabel="已复制"
+                  />
+                </div>
+                <table class="params-table">
+                  <tbody>
+                    {paramRows.map((row) => (
+                      <tr>
+                        <th scope="row">{row.key}</th>
+                        <td>{row.value || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          }
+
+          {
+            prompt.body && prompt.body.trim().length > 0 && (
+              <div class="panel">
+                <div class="panel__title"><span>使用说明与调整建议</span></div>
+                <div class="prose">
+                  <Content />
+                </div>
+              </div>
+            )
+          }
+
+          <div class="row" style="margin-top:26px">
+            <a class="btn btn--ghost btn--sm" href="/prompts/">
+              <ArrowLeft size={15} stroke-width={1.8} /> 返回提示词库
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="detail__side">
+        <div class="panel">
+          <div class="panel__title"><span>条目信息</span></div>
+          <dl class="facts">
+            <div>
+              <dt>适用模型</dt>
+              <dd>
+                {
+                  model ? (
+                    <a href={`/models/${model.data.slug}/`}>{model.data.name}</a>
+                  ) : (
+                    d.model
+                  )
+                }
+              </dd>
+            </div>
+            <div><dt>任务分类</dt><dd>{categoryName(d.category)}</dd></div>
+            {d.version && <div><dt>模型版本</dt><dd>{d.version}</dd></div>}
+            {d.style && <div><dt>风格</dt><dd>{d.style}</dd></div>}
+            <div>
+              <dt>实测状态</dt>
+              <dd>
+                {d.tested ? (
+                  <span style="color:var(--moss-deep);font-weight:600">已实测</span>
+                ) : (
+                  <span class="muted">暂无实测记录</span>
+                )}
+              </dd>
+            </div>
+            {d.tested && d.testedAt && (
+              <div><dt>测试日期</dt><dd>{formatDate(d.testedAt)}</dd></div>
+            )}
+            <div>
+              <dt>更新时间</dt>
+              <dd>
+                <span class="row" style="gap:5px;justify-content:flex-end">
+                  <Calendar size={13} stroke-width={1.8} /> {formatDate(d.updated)}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        {
+          d.tags.filter((t) => t !== '示例').length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>标签</span></div>
+              <div class="chip-row">
+                {d.tags
+                  .filter((t) => t !== '示例')
+                  .map((tag) => (
+                    <a class="chip chip--outline" href={`/prompts/?tag=${encodeURIComponent(tag)}`}>
+                      #{tag}
+                    </a>
+                  ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          model && (
+            <div class="panel">
+              <div class="panel__title"><span>关联模型</span></div>
+              <a
+                href={`/models/${model.data.slug}/`}
+                class="row"
+                style="gap:10px;color:var(--ink);align-items:flex-start"
+              >
+                <Boxes size={17} stroke-width={1.7} style="color:var(--wood);flex:none;margin-top:3px" />
+                <span>
+                  <strong style="color:var(--walnut)">{model.data.name}</strong>
+                  <br />
+                  <span class="small muted">{model.data.developer} · {model.data.license}</span>
+                </span>
+                <ArrowRight size={15} stroke-width={1.8} style="margin-left:auto;color:var(--ink-faint)" />
+              </a>
+            </div>
+          )
+        }
+
+        {
+          relatedArticles.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>相关技术文章</span></div>
+              <div class="link-list">
+                {relatedArticles.map((article) => (
+                  <a href={`/articles/${article.id}/`}>
+                    <FileText size={15} stroke-width={1.7} /> {article.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedProjects.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>相关工作流</span></div>
+              <div class="link-list">
+                {relatedProjects.map((project) => (
+                  <a href={`/projects/${project.id}/`}>
+                    <Workflow size={15} stroke-width={1.7} /> {project.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

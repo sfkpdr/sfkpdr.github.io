@@ -1,114 +1,336 @@
-# sfkpdr 的个人网站
+# 杨生的 AI 实践库
 
-这是我的个人网站，展示了我的作品集、博客和简历。
+一个以开源 AI 模型为核心的个人实践资源库：**提示词 + 效果图 + 模型资料 + 技术文章 + 视频教程 + ComfyUI 工作流**。
 
-## 网站特点
-
-- 📱 **响应式设计** - 完全适配各种设备和屏幕尺寸
-- 🎨 **现代美观** - 使用现代设计原则和配色方案
-- ⚡ **高性能** - 纯 HTML/CSS，加载速度快
-- 🔍 **SEO 友好** - 良好的 HTML 结构和语义标签
-- ♿ **无障碍** - 遵循 WCAG 指南
-
-## 网站内容
-
-### 首页 (index.html)
-- 英雄区域，展示个人信息和调用按钮
-- 关于我的简介
-- 技能展示
-- 最新博客文章预览
-
-### 作品集 (portfolio.html)
-- 展示 6 个代表性项目
-- 项目描述和技术栈
-- 项目链接
-
-### 博客 (blog.html)
-- 6 篇技术文章
-- 文章分类和标签
-- 阅读时间估计
-
-### 简历 (resume.html)
-- 个人信息和联系方式
-- 职业总结
-- 工作经历
-- 教育背景
-- 技能清单
-- 证书和认证
-
-## 文件结构
-
-```
-sfkpdr.github.io/
-├── index.html           # 首页
-├── portfolio.html       # 作品集页面
-├── blog.html            # 博客页面
-├── resume.html          # 简历页面
-├── css/
-│   └── style.css        # 全局样式表
-└── README.md            # 项目说明
-```
-
-## 快速开始
-
-1. 将仓库克隆到本地：
-```bash
-git clone https://github.com/sfkpdr/sfkpdr.github.io.git
-cd sfkpdr.github.io
-```
-
-2. 用你喜欢的浏览器打开 `index.html`
-
-或者访问在线版本：https://sfkpdr.github.io
-
-## 自定义
-
-要自定义网站为你的个人网站，需要修改以下内容：
-
-1. **个人信息** - 修改所有页面中的姓名、邮箱、电话等
-2. **作品集** - 更新 `portfolio.html` 中的项目信息
-3. **博客文章** - 在 `blog.html` 中添加你的文章
-4. **简历** - 更新 `resume.html` 中的工作经历和技能
-5. **颜色和样式** - 修改 `css/style.css` 中的 CSS 变量
-
-### 修改颜色方案
-
-在 `css/style.css` 的开头，你可以找到 CSS 变量定义：
-
-```css
-:root {
-    --primary-color: #3498db;      /* 主色 */
-    --secondary-color: #2c3e50;    /* 副色 */
-    --accent-color: #e74c3c;       /* 强调色 */
-    /* ... 其他变量 ... */
-}
-```
-
-修改这些颜色值，整个网站的配色方案就会改变。
-
-## 技术栈
-
-- HTML5
-- CSS3
-- 纯 JavaScript (无外部依赖)
-
-## 浏览器支持
-
-- Chrome (最新版本)
-- Firefox (最新版本)
-- Safari (最新版本)
-- Edge (最新版本)
-
-## 许可证
-
-MIT License
-
-## 联系方式
-
-- 邮箱: your.email@example.com
-- GitHub: https://github.com/sfkpdr
-- 网站: https://sfkpdr.github.io
+线上地址：<https://sfkpdr.github.io>
+仓库：<https://github.com/sfkpdr/sfkpdr.github.io>
 
 ---
 
-💡 **提示**: 记得更新上面的联系方式为你自己的信息！
+## 1. 技术方案（为什么是 Astro）
+
+原站是 4 个手写 HTML + 1 个 CSS，内容全部写死在页面里，加一条提示词要改 3 个文件。
+现在迁移到 **Astro 5 静态站点**，核心变化是**数据和页面分离**：
+
+| 需求 | 做法 |
+| --- | --- |
+| 加一条提示词不改页面代码 | 内容存在 `src/content/prompts/*.md`，列表、详情、筛选、搜索索引全部在构建时自动生成 |
+| 手机随时上传 | 仓库根目录 `.pages.yml` 接入 [Pages CMS](https://pagescms.org/)，直接管理 GitHub 仓库里的内容文件 |
+| 零后端、零数据库 | 纯静态构建，GitHub Pages 托管，推送即部署 |
+| 内容填错能立刻发现 | `scripts/validate-content.mjs` 在构建前校验字段、slug、图片路径、关联关系 |
+| 长期可维护 | 字段定义集中（`src/content.config.ts` + `.pages.yml`），换 CMS 或换框架都不必重写内容 |
+
+技术栈：Astro 5 · TypeScript · Content Collections（glob loader + zod 校验）· Lucide 图标 · 原生 CSS 变量 · GitHub Actions。
+
+> **搜索没有用 Pagefind**：Pagefind 的默认二进制不带中文分词（需要扩展版二进制），
+> 而本站内容几乎全是中文。改为构建时生成 JSON 索引 + 浏览器端子串匹配，中文输入一个字即可命中，
+> 且不依赖任何外部服务与二进制，部署在 GitHub Pages 上体积和速度都更可控。详见第 8 节。
+
+---
+
+## 2. 本地运行
+
+需要 Node.js 18+（推荐 20/22）。
+
+```bash
+npm install          # 安装依赖
+npm run dev          # 本地预览 http://localhost:4321
+npm run check        # 只做内容校验
+npm run build        # 内容校验 + 构建到 dist/
+npm run preview      # 预览构建结果
+```
+
+> 国内网络安装依赖慢时：`npm install --registry=https://registry.npmmirror.com`
+
+---
+
+## 3. 目录结构
+
+```text
+.
+├── .pages.yml                    # 手机端后台（Pages CMS）配置：字段、目录、图片路径
+├── astro.config.mjs              # 站点地址、sitemap、代码高亮
+├── package.json
+├── src/
+│   ├── content.config.ts         # 内容集合与字段校验规则（唯一权威定义）
+│   ├── content/
+│   │   ├── prompts/              # 提示词（一条一个 .md）
+│   │   ├── models/               # 模型资料
+│   │   ├── articles/             # 技术文章
+│   │   ├── videos/               # 视频教程
+│   │   └── projects/             # 工作流与作品
+│   ├── data/
+│   │   ├── categories.json       # 任务分类（AI 生图 / 人像摄影 / …）
+│   │   ├── article-categories.json
+│   │   └── site.json             # 站点名称、作者、仓库地址、后台地址
+│   ├── lib/
+│   │   ├── content.ts            # 取数、排序、格式化
+│   │   └── search-index.ts       # 构建搜索索引
+│   ├── components/                # Header / Footer / 各类卡片 / 筛选面板 / 复制按钮
+│   ├── layouts/BaseLayout.astro   # HTML 头、OG、导航、页脚
+│   ├── pages/                     # 路由（见下表）
+│   ├── scripts/                   # 浏览器端：筛选、搜索、复制、TOC
+│   └── styles/global.css          # 原木风格设计系统（颜色变量都在这里）
+├── public/
+│   ├── images/{prompts,models,articles,videos,projects}/
+│   ├── downloads/                 # 工作流文件（json / zip）
+│   └── {blog,portfolio,resume}.html  # 旧链接 301 式跳转页
+├── scripts/
+│   ├── validate-content.mjs       # 内容校验
+│   └── gen-placeholders.mjs       # 生成示例占位图（仅首次使用）
+├── templates/                     # 手工建内容时的 Markdown 模板
+└── archive/legacy-site/           # 迁移前的老站文件（只作留档，不参与构建）
+```
+
+路由一览：
+
+| 路径 | 说明 |
+| --- | --- |
+| `/` | 首页 |
+| `/prompts/` | 提示词库（筛选 + 排序 + 库内搜索） |
+| `/prompts/<slug>/` | 提示词详情（大图、完整提示词、复制、参数、相关模型/文章/工作流） |
+| `/models/` `/models/<slug>/` | 模型库与模型详情 |
+| `/articles/` `/articles/<slug>/` | 文章列表与文档型详情（左侧分类、右侧目录、代码复制） |
+| `/videos/` | 视频教程 |
+| `/projects/` `/projects/<slug>/` | 工作流与作品 |
+| `/about/` | 关于我（整合了原简历内容，可打印成 PDF） |
+| `/search/` | 全站搜索 |
+| `/admin/` | 手机端管理入口（只是跳转，不含任何凭据） |
+| `/license-notes/` | 资源来源与许可证说明 |
+| `/rss.xml` `/sitemap-index.xml` | 订阅与站点地图 |
+
+---
+
+## 4. 手机端上传与管理网站内容
+
+**日常维护只需要手机。** 内容保存在 GitHub 仓库，保存后 GitHub Actions 自动重新构建并发布，不需要电脑，也不需要手动跑命令。
+
+### 4.1 首次授权（只做一次）
+
+1. 手机浏览器打开 <https://app.pagescms.org/>
+2. 选择 **Sign in with GitHub**，用拥有 `sfkpdr/sfkpdr.github.io` 权限的账号登录
+3. 首次会跳转 GitHub 授权页，安装 **Pages CMS** 的 GitHub App，并**只勾选这一个仓库**
+   （授权范围仅限仓库内容读写，可随时在 GitHub → Settings → Applications 里撤销）
+4. 回到 Pages CMS，选择仓库 `sfkpdr/sfkpdr.github.io`、分支 `main`
+5. 左侧出现五个中文栏目：提示词库 / 模型库 / 技术文章 / 视频教程 / 工作流与作品
+
+### 4.2 加到手机桌面（推荐）
+
+- **iPhone**：Safari 打开 → 分享 → 添加到主屏幕
+- **Android**：Chrome 打开 → 右上角菜单 → 添加到主屏幕
+
+以后点图标直接进后台，不用再输网址。
+
+### 4.3 新增一条提示词（七步）
+
+| 步骤 | 操作 |
+| --- | --- |
+| 1 | 左侧点「提示词库」→ 右上角「新增」 |
+| 2 | 填**提示词标题** |
+| 3 | 点「生成效果图」→ 从相册选图上传（必填） |
+| 4 | **适用模型**从下拉里选（读的是模型库，不要手打）；**任务分类**选一个；标签按需添加 |
+| 5 | 在「完整提示词」里粘贴正文 |
+| 6 | 需要就继续填负向提示词、模型版本、生成参数、实测状态、使用说明 |
+| 7 | **发布状态**选「已发布」→ 保存。等待 1–3 分钟，网站上就出现了 |
+
+保存后 Pages CMS 会直接向仓库提交一次 commit，GitHub Actions 自动构建部署。
+
+### 4.4 草稿与发布
+
+- 每条内容都有「发布状态」字段：**草稿** / **已发布**。
+- 草稿不会出现在任何列表、详情页、搜索索引和 sitemap 里，只有你自己在后台能看到。
+- 想先写一半、明天再发：存成草稿即可。**保存 ≠ 公开**，公开只取决于这个字段。
+- 上线前建议：先用草稿补齐字段 → 自己念一遍提示词 → 再改成已发布。
+
+### 4.5 图片规则
+
+- 上传的图片自动保存到 `public/images/prompts/`，公开路径 `/images/prompts/文件名` 会自动写进内容字段，不需要手填。
+- 文件名由系统随机生成（避免同名覆盖和中文文件名问题），不用管。
+- 支持 JPG / PNG / WebP。**建议宽度 1200–1600px，单张 ≤ 300KB**（手机直出图先用微信/相册压一下再传）。
+- 一条提示词对应一张图：`image` 字段是唯一关联方式，不会靠文件名或标题去猜。
+
+### 4.6 修改与删除
+
+- **修改**：列表里点开条目 → 改字段 → 保存。旧图片不会被自动删除，确认没被其它条目引用后可手动在仓库里删掉（见 4.7）。
+- **删除**：条目页右上角菜单 → Delete，会二次确认。删除后请顺手检查 `public/images/prompts/` 里对应图片是否还有别处引用，没有就可以一起删。
+- 任何删除都是 Git 提交，**删错了可以在 GitHub 的 commit 历史里恢复**。
+
+### 4.7 后台表单字段结构
+
+五个栏目与字段一一对应 `src/content.config.ts`。必填项汇总：
+
+| 栏目 | 必填字段 |
+| --- | --- |
+| 提示词库 | 标题、slug、效果图、适用模型、任务分类、完整提示词、发布状态、更新时间 |
+| 模型库 | 名称、slug、开发者、一句话介绍、许可证、官方模型链接、发布状态、更新时间 |
+| 技术文章 | 标题、slug、摘要、分类、发布日期、发布状态 |
+| 视频教程 | 标题、slug、简介、封面图、视频地址、发布日期、发布状态 |
+| 工作流与作品 | 标题、slug、一句话说明、预览图、类型、发布日期、发布状态 |
+
+字段在后台都有中文标签与填写说明；不确定时**留空比乱填好**，缺失的可选字段不会让页面报错，整块内容会自动隐藏。
+
+---
+
+## 5. 电脑端手工添加内容（可选的第二条路）
+
+不习惯后台时，也可以直接加文件，效果完全一样。复制 `templates/` 里的模板：
+
+```bash
+cp templates/prompt-template.md src/content/prompts/my-new-prompt.md
+```
+
+需要改的地方只有三处：
+
+1. `slug` 与**文件名保持一致**（`my-new-prompt.md` → `slug: my-new-prompt`）
+2. `image` 指向 `public/images/prompts/` 下的真实文件
+3. `model` 写模型库里的 `slug`（例如 `flux1-dev`），不是显示名
+
+然后 `npm run dev` 本地看效果，`npm run build` 确认通过，再提交。
+
+> 新增分类/标签：分类在 `src/data/categories.json`（任务）与 `src/data/article-categories.json`（文章）里加一项即可；
+> 标签不需要注册，直接写在内容里，筛选项会自动出现。
+
+---
+
+## 6. 部署（GitHub Pages + GitHub Actions）
+
+### 6.1 必须做的一次设置 ⚠️
+
+原站是「分支直出」模式。改成 Astro 之后**必须把 Pages 的来源切到 GitHub Actions**，否则会看到一个没有样式的源码目录：
+
+1. 仓库 → **Settings → Pages**
+2. **Build and deployment → Source** 选 **GitHub Actions**（不要选 Deploy from a branch）
+3. 保存。之后每次推送 `main` 都会自动构建部署
+
+自定义域名 / 仓库名说明：仓库是 `sfkpdr.github.io`（用户主页仓库），站点在根路径 `/`，
+所以 `astro.config.mjs` 里的 `site` 设为 `https://sfkpdr.github.io`，**不需要 `base`**。
+以后若改成项目仓库（`/repo-name/` 形式），要同时设置 `site` 与 `base`。
+
+### 6.2 流程
+
+`.github/workflows/deploy.yml`：
+
+```text
+push 到 main
+  → npm ci
+  → npm run build（先内容校验，再 astro build）
+  → 上传 dist 作为 Pages 产物
+  → 部署到 GitHub Pages
+```
+
+- 构建失败不会影响线上已发布的版本。
+- 失败日志在 **Actions** 页签里，红色 ✗ 的步骤点开就能看到具体文件与行号。
+- 深链、刷新、404：`build.format: 'directory'` 会为每个页面生成 `路径/index.html`，刷新任意深层链接都正常；
+  未匹配路径落到 `404.html`。
+
+### 6.3 常见构建失败
+
+| 报错关键字 | 原因 | 修复 |
+| --- | --- | --- |
+| `引用的图片不存在：public/images/...` | 内容里的图片路径不对，或图片没提交 | 重新上传图片，或改正路径 |
+| `slug 不合法` / `slug 重复` | slug 用了中文/大写，或与已有条目撞车 | 改成小写英文 + 连字符，保持唯一 |
+| `引用了不存在的模型` | 提示词指向了模型库里没有的 slug | 先去模型库建这个模型，或改选现有模型 |
+| `prompt 为空或过短` | 完整提示词没填 | 补齐提示词正文 |
+| `YAML 解析失败` | frontmatter 少了引号/缩进错 | 用后台表单改，或对照模板修 |
+
+---
+
+## 7. 内容校验规则
+
+`npm run check`（`build` 会自动先跑）会检查：
+
+- slug 是否合法、是否重复、是否与文件名一致
+- 必填字段是否缺失（标题、图片、提示词正文、模型、分类、日期、状态等）
+- 图片/工作流文件在 `public/` 下是否真实存在（**路径不猜、不模糊匹配**）
+- 引用的模型、文章、作品、提示词是否存在
+- 分类 id 是否在 `src/data/*.json` 中
+- 图片是否过大（>1.5MB 给警告）、多条提示词是否共用同一张图（警告）
+- 示例条目是否还处于已发布状态（警告）
+
+**有错误会直接中止构建**，GitHub Actions 里同样生效——坏数据进不了线上。
+
+---
+
+## 8. 搜索与筛选
+
+- **筛选**：全站统一的 `src/scripts/library-filter.ts`，状态写进 URL 查询参数
+  （`/prompts/?model=flux1-dev&category=product&tag=写实&tested=1&sort=title`），
+  可分享、可刷新保持、可组合；桌面端左侧栏，手机端底部抽屉。
+- **库内搜索**：输入时按需加载 `search-index/prompts.json`，匹配标题、标签、模型名与**提示词正文**。
+- **全站搜索**：`/search/` 一次加载五类索引（`/search-index/{prompts,models,articles,videos,projects}.json`），
+  支持分类切换、结果高亮、分组展示。索引在构建时由 `src/lib/search-index.ts` 生成，不需要额外服务。
+- 内容量到几千条时，索引仍是按类型拆分的静态 JSON，单次只会加载需要的部分。
+
+---
+
+## 9. 设计与主题
+
+所有颜色、圆角、阴影、间距都在 `src/styles/global.css` 顶部的 `:root` 里：
+
+```css
+--linen: #f5f0e6;    /* 页面主背景：亚麻米白 */
+--wood-light: #e5d5be;
+--wood: #c39b70;     /* 木纹装饰色 */
+--walnut: #604630;   /* 胡桃木主色：标题、按钮 */
+--ink: #36312b;      /* 正文 */
+--moss: #78836a;     /* 辅助苔绿：已实测、提示条 */
+--card: #fffdf8;     /* 卡片暖白 */
+```
+
+木纹只做局部点缀（首页主视觉的细线、页脚的暖色渐层），不铺满整页；图标统一用 Lucide 线性图标，
+笔画 1.7–1.8，尺寸 14–20。改主题只需要改这些变量，不需要动组件。
+
+---
+
+## 10. 迁移与遗留内容说明
+
+- 旧站的 4 个页面已归档到 `archive/legacy-site/`（保留原始 HTML/CSS/背景图，只作留档）。
+- `public/{blog,portfolio,resume}.html` 是跳转页，把旧链接导向 `/articles/`、`/projects/`、`/about/`。
+- 旧博客的 6 条摘要已迁移为文章条目，其中 4 条是**草稿**（正文待补全，标题下方有说明），
+  补齐后把「发布状态」改为已发布即可。
+- 原简历内容整合进 `/about/`，页面上有「打印 / 存为 PDF」按钮。
+- 旧的 `css/style.css`、`images/background.jpg` 未删除，随归档一起保留在 `archive/`。
+
+### 示例内容需要替换 ⚠️
+
+首次上线带了少量示例数据，用来演示结构：
+
+- 3 条提示词（标签含「示例」，图片是带 `SAMPLE` 水印的占位图，**不是真实生成结果**，参数未经实测）
+- 1 条视频模板（草稿状态，不会显示）
+- 模型库 3 条、文章 2 篇、作品 1 条为真实资料整理
+
+**建议第一件事：把 3 条示例提示词替换成你自己的图与提示词，或直接删掉。**
+
+---
+
+## 11. 需要你亲自完成的清单
+
+- [ ] 把 `Settings → Pages → Source` 改成 **GitHub Actions**
+- [ ] 首次登录 <https://app.pagescms.org/>，授权 GitHub App（只勾这一个仓库）
+- [ ] 手机上试传一条提示词，确认 Actions 构建通过、网站出现新条目
+- [ ] 替换 3 条示例提示词（图片 + 提示词 + 状态）
+- [ ] 4 篇草稿文章补齐正文后发布
+- [ ] 在 `src/data/site.json` 里补上邮箱（如果希望页脚显示）
+
+> 以上步骤需要你的 GitHub 账号权限，我无法代做，也不会假装已完成。
+> 站内不存放任何令牌：CMS 的权限完全由 GitHub App 授权控制。
+
+---
+
+## 12. 常见问题
+
+**Q：保存后网站没更新？**
+先在 Actions 里看最新一次运行：还在跑就等；失败了按 6.3 的表排错；成功但页面没变，清一下手机浏览器缓存。
+
+**Q：能不能直接传视频文件？**
+不要。视频放 B 站/YouTube，站内只存封面和链接——仓库体积一旦上去，克隆和构建都会变慢。
+
+**Q：图片想统一转成 WebP？**
+用系统自带工具或 [squoosh.app](https://squoosh.app/) 转好再上传，宽度 1200–1600px 足够。
+
+**Q：想加新的大栏目？**
+复制一个 `src/content/<name>/` 集合 + `src/pages/<name>/` 页面 + `.pages.yml` 里加一段配置，
+复用现成的 `FilterPanel` 与 `library-filter.ts` 即可。
+
+**Q：数据以后想搬到别的框架？**
+内容全是标准 Markdown + frontmatter，图片是普通静态文件，`src/content/*` 直接可搬。

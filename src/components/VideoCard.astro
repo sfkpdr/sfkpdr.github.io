@@ -1,0 +1,43 @@
+---
+import Play from '@lucide/astro/icons/play';
+import Calendar from '@lucide/astro/icons/calendar';
+import type { Video, Model } from '../lib/content';
+import { formatDate } from '../lib/content';
+
+interface Props {
+  video: Video;
+  models?: Model[];
+}
+
+const { video, models = [] } = Astro.props;
+const d = video.data;
+---
+
+<article
+  class="card article-card"
+  data-item
+  data-id={video.id}
+  data-f-platform={d.platform}
+  data-f-models={d.models.join('|')}
+  data-title={d.title}
+  data-sort={String(d.date.valueOf())}
+  data-search={`${d.title} ${d.summary} ${d.platform} ${d.tags.join(' ')}`}
+>
+  <a class="video-card__media" href={d.videoUrl} target="_blank" rel="noopener noreferrer">
+    <img src={d.cover} alt={`${d.title} 封面`} loading="lazy" decoding="async" width="800" height="450" />
+    <span class="video-card__play" aria-hidden="true"><span><Play size={20} stroke-width={2} /></span></span>
+    {d.duration && <span class="video-card__duration">{d.duration}</span>}
+  </a>
+
+  <div class="article-card__body">
+    <span class="article-card__cat">{d.platform}</span>
+    <h3 class="article-card__title">
+      <a href={d.videoUrl} target="_blank" rel="noopener noreferrer">{d.title}</a>
+    </h3>
+    <p class="article-card__excerpt">{d.summary}</p>
+    <div class="article-card__foot meta">
+      <span class="row" style="gap:5px"><Calendar size={13} stroke-width={1.8} /> {formatDate(d.date)}</span>
+      {models.length > 0 && <span>{models.map((m) => m.data.name).join(' · ')}</span>}
+    </div>
+  </div>
+</article>

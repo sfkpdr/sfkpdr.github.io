@@ -1,0 +1,121 @@
+---
+import Search from '@lucide/astro/icons/search';
+import Menu from '@lucide/astro/icons/menu';
+import X from '@lucide/astro/icons/x';
+import House from '@lucide/astro/icons/house';
+import ImageIcon from '@lucide/astro/icons/image';
+import Boxes from '@lucide/astro/icons/boxes';
+import FileText from '@lucide/astro/icons/file-text';
+import VideoIcon from '@lucide/astro/icons/video';
+import Workflow from '@lucide/astro/icons/workflow';
+import User from '@lucide/astro/icons/user';
+import { site } from '../lib/content';
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+const navItems = [
+  { label: '首页', href: '/', icon: House, match: (p: string) => p === '/' },
+  { label: '提示词库', href: '/prompts/', icon: ImageIcon, match: (p: string) => p.startsWith('/prompts') },
+  { label: '模型库', href: '/models/', icon: Boxes, match: (p: string) => p.startsWith('/models') },
+  { label: '技术文章', href: '/articles/', icon: FileText, match: (p: string) => p.startsWith('/articles') },
+  { label: '视频教程', href: '/videos/', icon: VideoIcon, match: (p: string) => p.startsWith('/videos') },
+  { label: '工作流与作品', href: '/projects/', icon: Workflow, match: (p: string) => p.startsWith('/projects') },
+];
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/" aria-label={`${site.name} 首页`}>
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7h18M5 7v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V7" />
+          <path d="M8 3h8l1 4H7l1-4Z" />
+          <path d="M9.5 11.5h5M9.5 15.5h3" />
+        </svg>
+      </span>
+      <span class="brand__text">
+        杨生 · AI 实践库
+        <small>PROMPTS / MODELS / NOTES</small>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="主导航">
+      {
+        navItems.map((item) => (
+          <a
+            class="nav__link"
+            href={item.href}
+            aria-current={item.match(path) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" type="button" data-search-open aria-label="全站搜索">
+        <Search size={17} stroke-width={1.8} />
+      </button>
+      <button
+        class="icon-btn nav-toggle"
+        type="button"
+        data-nav-toggle
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        aria-label="打开菜单"
+      >
+        <span data-icon-menu><Menu size={18} stroke-width={1.8} /></span>
+        <span data-icon-close hidden><X size={18} stroke-width={1.8} /></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-nav container" id="mobile-nav" data-open="false">
+    {
+      navItems.map((item) => {
+        const NavIcon = item.icon;
+        return (
+          <a href={item.href} aria-current={item.match(path) ? 'page' : undefined}>
+            <NavIcon size={16} stroke-width={1.7} />
+            {item.label}
+          </a>
+        );
+      })
+    }
+    <a href="/about/" aria-current={path.startsWith('/about') ? 'page' : undefined}>
+      <User size={16} stroke-width={1.7} />
+      关于我
+    </a>
+    <a href="/search/">
+      <Search size={16} stroke-width={1.7} />
+      全站搜索
+    </a>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const panel = document.querySelector<HTMLElement>('[data-open][id="mobile-nav"]');
+
+  if (toggle && panel) {
+    toggle.addEventListener('click', () => {
+      const open = panel.dataset.open !== 'true';
+      panel.dataset.open = String(open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+      const menuIcon = toggle.querySelector<HTMLElement>('[data-icon-menu]');
+      const closeIcon = toggle.querySelector<HTMLElement>('[data-icon-close]');
+      if (menuIcon) menuIcon.hidden = open;
+      if (closeIcon) closeIcon.hidden = !open;
+    });
+
+    // 点击导航项后自动收起
+    panel.addEventListener('click', (event) => {
+      if ((event.target as HTMLElement).closest('a')) {
+        panel.dataset.open = 'false';
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+</script>

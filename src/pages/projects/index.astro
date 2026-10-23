@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import FilterPanel, { type FilterGroup } from '../../components/FilterPanel.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Search from '@lucide/astro/icons/search';
+import SlidersHorizontal from '@lucide/astro/icons/sliders-horizontal';
+import ChevronDown from '@lucide/astro/icons/chevron-down';
+import X from '@lucide/astro/icons/x';
+import { getModels, getProjects, pickModels } from '../../lib/content';
+
+const [projects, models] = await Promise.all([getProjects(), getModels()]);
+const modelIndex = new Map(models.map((m) => [m.data.slug, m]));
+
+const typeLabels: Record<string, string> = {
+  image: '图像作品',
+  video: '视频作品',
+  workflow: '工作流',
+};
+
+const usedTypes = [...new Set(projects.map((p) => p.data.type))];
+const typeOptions = usedTypes.map((value) => ({
+  value,
+  label: typeLabels[value] ?? value,
+  count: projects.filter((p) => p.data.type === value).length,
+}));
+
+const usedModels = [...new Set(projects.flatMap((p) => p.data.models))];
+const modelOptions = usedModels.map((value) => ({
+  value,
+  label: modelIndex.get(value)?.data.name ?? value,
+  count: projects.filter((p) => p.data.models.includes(value)).length,
+}));
+
+const groups: FilterGroup[] = [
+  { key: 'type', label: '作品类型', options: typeOptions, allLabel: '全部类型' },
+  { key: 'models', label: '适用模型', options: modelOptions, allLabel: '全部模型' },
+];
+---
+
+<BaseLayout
+  title="工作流与作品"
+  description="AI 创作案例与 ComfyUI 工作流：作品预览、创作说明、关联提示词、教程与工作流下载。"
+>
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <span>工作流与作品</span>
+      </nav>
+      <h1>工作流与作品</h1>
+      <p>
+        从作品出发，顺着提示词看模型，再读教程、下工作流。每个条目都把这几层资源串在一起。
+      </p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="library" data-library data-groups="type,models" data-index="/search-index/projects.json">
+      <FilterPanel groups={groups} variant="sidebar" />
+
+      <div>
+        <div class="mobile-filter-bar">
+          <button class="btn btn--ghost btn--sm" type="button" data-drawer-open>
+            <SlidersHorizontal size={15} stroke-width={1.8} /> 筛选
+          </button>
+        </div>
+
+        <div class="library__head">
+          <div class="search-field" style="flex:1;min-width:220px;max-width:420px">
+            <Search size={17} stroke-width={1.8} />
+            <input type="search" placeholder="搜索作品或工作流…" data-filter-search aria-label="搜索作品" />
+          </div>
+          <div class="row" style="gap:10px">
+            <span class="library__count">共 <b data-count>{projects.length}</b> 个</span>
+            <label class="select-wrap">
+              <select aria-label="排序方式" data-sort>
+                <option value="">最新发布</option>
+                <option value="oldest">最早发布</option>
+                <option value="title">按标题</option>
+              </select>
+              <ChevronDown size={15} stroke-width={1.8} />
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-summary" data-summary></div>
+
+        {
+          projects.length > 0 ? (
+            <div class="grid grid--wide" data-grid>
+              {projects.map((project) => (
+                <ProjectCard
+                  project={project}
+                  models={pickModels(project.data.models, modelIndex)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="还没有公开的作品"
+              text="在手机端后台新增一条作品/工作流，上传预览图，关联模型与提示词，可选上传工作流 JSON 文件。"
+            >
+              <a class="btn btn--primary btn--sm" href="/admin/">打开手机端后台</a>
+            </EmptyState>
+          )
+        }
+
+        <div data-no-result hidden>
+          <EmptyState title="没有匹配的作品" text="换个关键词，或者清空筛选条件。">
+            <button class="btn btn--ghost btn--sm" type="button" data-reset>清除全部筛选</button>
+          </EmptyState>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-drawer" data-drawer data-open="false">
+    <div class="filter-drawer__scrim" data-drawer-close></div>
+    <div class="filter-drawer__panel">
+      <div class="filter-drawer__head">
+        <strong style="font-size:1rem">筛选条件</strong>
+        <button class="icon-btn" type="button" data-drawer-close aria-label="关闭筛选">
+          <X size={17} stroke-width={1.8} />
+        </button>
+      </div>
+      <FilterPanel groups={groups} variant="drawer" />
+      <button class="btn btn--primary btn--block" type="button" data-drawer-close style="margin-top:16px">
+        查看结果
+      </button>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../../scripts/library-filter';
+</script>

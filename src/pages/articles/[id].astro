@@ -1,0 +1,206 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import ArrowRight from '@lucide/astro/icons/arrow-right';
+import Calendar from '@lucide/astro/icons/calendar';
+import Clock from '@lucide/astro/icons/clock';
+import Boxes from '@lucide/astro/icons/boxes';
+import ImageIcon from '@lucide/astro/icons/image';
+import Workflow from '@lucide/astro/icons/workflow';
+import { articleCategories, articleCategoryName, formatDate, getArticles, getModels, getProjects, getPrompts, pickModels } from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const articles = await getArticles();
+  return articles.map((article, index) => ({
+    params: { id: article.id },
+    props: {
+      article,
+      prev: articles[index + 1] ?? null,
+      next: articles[index - 1] ?? null,
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { article, prev, next } = Astro.props;
+const { Content, headings } = await render(article);
+const d = article.data;
+
+const [models, prompts, projects, allArticles] = await Promise.all([
+  getModels(),
+  getPrompts(),
+  getProjects(),
+  getCollection('articles', ({ data }) => data.status === 'published'),
+]);
+
+const modelIndex = new Map(models.map((m) => [m.data.slug, m]));
+const relatedModels = pickModels(d.models, modelIndex);
+const relatedPrompts = prompts.filter((p) => d.prompts.includes(p.id));
+const relatedProjects = projects.filter((p) => d.projects.includes(p.id));
+
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const words = (article.body ?? '').replace(/\s+/g, '').length;
+const minutes = Math.max(1, Math.round(words / 380));
+
+const navCategories = articleCategories.filter((c) =>
+  allArticles.some((a) => a.data.category === c.id)
+);
+---
+
+<BaseLayout title={d.title} description={d.summary} image={d.cover} type="article">
+  <div class="container">
+    <div style="padding-top:20px">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <a href="/articles/">技术文章</a> <span>/</span>
+        <span>{articleCategoryName(d.category)}</span>
+      </nav>
+    </div>
+
+    <div class="doc">
+      <nav class="doc__nav" aria-label="文章分类">
+        <div class="doc__nav-title">{articleCategoryName(d.category)}</div>
+        <ul>
+          {
+            navCategories.map((category) => (
+              <li>
+                <a
+                  href={`/articles/?category=${category.id}`}
+                  aria-current={category.id === d.category ? 'true' : undefined}
+                >
+                  {category.name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="doc__nav-title" style="margin-top:18px">其他入口</div>
+        <ul>
+          <li><a href="/prompts/">提示词库</a></li>
+          <li><a href="/models/">模型库</a></li>
+          <li><a href="/projects/">工作流与作品</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc__main">
+        <header class="article-head">
+          <div class="chip-row" style="margin-bottom:4px">
+            <a class="chip" href={`/articles/?category=${d.category}`}>
+              {articleCategoryName(d.category)}
+            </a>
+            {d.tags.slice(0, 3).map((tag) => (
+              <a class="chip chip--outline" href={`/articles/?tag=${encodeURIComponent(tag)}`}>
+                #{tag}
+              </a>
+            ))}
+          </div>
+          <h1>{d.title}</h1>
+          <div class="article-head__meta">
+            <span class="row" style="gap:5px">
+              <Calendar size={14} stroke-width={1.8} /> {formatDate(d.date)}
+            </span>
+            <span class="row" style="gap:5px">
+              <Clock size={14} stroke-width={1.8} /> 约 {minutes} 分钟
+            </span>
+          </div>
+        </header>
+
+        <div class="prose" data-article-body>
+          <Content />
+        </div>
+
+        {
+          (relatedPrompts.length > 0 || relatedModels.length > 0 || relatedProjects.length > 0) && (
+            <section style="margin-top:44px;padding-top:24px;border-top:1px solid var(--border)">
+              <h2 style="font-size:1.05rem">这篇提到的资源</h2>
+              <div class="grid grid--2" style="margin-top:14px">
+                {relatedModels.length > 0 && (
+                  <div class="panel">
+                    <div class="panel__title"><span>模型</span></div>
+                    <div class="link-list">
+                      {relatedModels.map((model) => (
+                        <a href={`/models/${model!.data.slug}/`}>
+                          <Boxes size={15} stroke-width={1.7} /> {model!.data.name}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {relatedPrompts.length > 0 && (
+                  <div class="panel">
+                    <div class="panel__title"><span>提示词</span></div>
+                    <div class="link-list">
+                      {relatedPrompts.map((prompt) => (
+                        <a href={`/prompts/${prompt.id}/`}>
+                          <ImageIcon size={15} stroke-width={1.7} /> {prompt.data.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {relatedProjects.length > 0 && (
+                  <div class="panel">
+                    <div class="panel__title"><span>工作流与作品</span></div>
+                    <div class="link-list">
+                      {relatedProjects.map((project) => (
+                        <a href={`/projects/${project.id}/`}>
+                          <Workflow size={15} stroke-width={1.7} /> {project.data.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )
+        }
+
+        <nav class="pager" aria-label="上下篇">
+          {
+            prev ? (
+              <a href={`/articles/${prev.id}/`}>
+                <span>上一篇</span>
+                <span class="row" style="gap:6px">
+                  <ArrowLeft size={14} stroke-width={1.8} /> {prev.data.title}
+                </span>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next ? (
+              <a class="next" href={`/articles/${next.id}/`}>
+                <span>下一篇</span>
+                <span class="row" style="gap:6px">
+                  {next.data.title} <ArrowRight size={14} stroke-width={1.8} />
+                </span>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+        </nav>
+      </div>
+
+      <aside class="doc__toc" aria-label="本文目录">
+        <div class="doc__toc-title">本文目录</div>
+        <ul>
+          {
+            toc.map((heading) => (
+              <li>
+                <a href={`#${heading.slug}`} class={heading.depth === 3 ? 'is-sub' : ''}>
+                  {heading.text}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../../scripts/article-enhance';
+</script>

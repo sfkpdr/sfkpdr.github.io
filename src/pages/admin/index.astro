@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Smartphone from '@lucide/astro/icons/smartphone';
+import ExternalLink from '@lucide/astro/icons/external-link';
+import Shield from '@lucide/astro/icons/shield';
+import BookOpen from '@lucide/astro/icons/book-open';
+import Github from '../../components/GithubIcon.astro';
+import { site } from '../../lib/content';
+---
+
+<BaseLayout
+  title="内容管理入口"
+  description="手机端上传与管理网站内容：提示词、模型、文章、视频与工作流。"
+  noindex={true}
+>
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <span>内容管理</span>
+      </nav>
+      <h1>内容管理入口</h1>
+      <p>
+        用手机就能新增提示词、上传效果图、发布文章。内容保存在 GitHub 仓库，
+        每次保存都会自动触发构建并更新网站。
+      </p>
+    </div>
+  </section>
+
+  <div class="container container--narrow" style="padding:40px 24px 72px">
+    <div class="panel" style="text-align:center;padding:32px 24px">
+      <span class="empty__icon" style="margin-bottom:12px"><Smartphone size={22} stroke-width={1.7} /></span>
+      <h2 style="font-size:1.15rem;margin-bottom:8px">打开 Pages CMS 后台</h2>
+      <p class="small muted" style="max-width:38ch;margin:0 auto 20px">
+        首次使用需要用 GitHub 账号授权 <code>sfkpdr/sfkpdr.github.io</code> 仓库。
+        授权只发生在 GitHub 官方页面，本站不保存任何凭据。
+      </p>
+      <a class="btn btn--primary" href={site.cmsUrl} target="_blank" rel="noopener noreferrer">
+        <ExternalLink size={16} stroke-width={1.9} /> 进入 app.pagescms.org
+      </a>
+    </div>
+
+    <div class="grid grid--2" style="margin-top:24px">
+      <div class="panel">
+        <div class="panel__title"><span>手机端三步走</span></div>
+        <ol style="padding-left:1.2em;margin:0;font-size:0.9rem;line-height:1.9">
+          <li>用手机浏览器打开 <a href={site.cmsUrl} target="_blank" rel="noopener noreferrer">app.pagescms.org</a></li>
+          <li>登录 GitHub，选择 <code>sfkpdr/sfkpdr.github.io</code> 仓库</li>
+          <li>左侧点「提示词库」→「新增提示词」，填标题、传图、粘贴提示词，保存</li>
+        </ol>
+      </div>
+
+      <div class="panel">
+        <div class="panel__title"><span>收藏到桌面</span></div>
+        <ul style="padding-left:1.1em;margin:0;font-size:0.9rem;line-height:1.9">
+          <li>iOS Safari：分享 → 添加到主屏幕</li>
+          <li>Android Chrome：菜单 → 添加到主屏幕</li>
+          <li>下次点图标就能直接进后台，不用再输网址</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:24px">
+      <Shield size={16} stroke-width={1.8} />
+      <span>
+        这个页面只是入口，没有任何编辑能力，也不包含令牌。真正的权限由 Pages CMS 通过
+        GitHub App 授权控制，随时可以在 GitHub 的 Applications 设置里撤销。
+      </span>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel__title"><span>相关链接</span></div>
+      <div class="link-list">
+        <a href={`${site.repo}/blob/main/README.md`} target="_blank" rel="noopener noreferrer">
+          <BookOpen size={15} stroke-width={1.7} /> README：字段说明与维护流程
+        </a>
+        <a href={site.repo} target="_blank" rel="noopener noreferrer">
+          <Github size={15} /> 仓库首页
+        </a>
+        <a href={`${site.repo}/actions`} target="_blank" rel="noopener noreferrer">
+          <ExternalLink size={15} stroke-width={1.7} /> 构建与部署日志（Actions）
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "text-to-image",
+    "name": "AI 生图",
+    "description": "文生图、图生图、局部重绘等各类图像生成提示词",
+    "icon": "image",
+    "order": 1
+  },
+  {
+    "id": "text-to-video",
+    "name": "AI 视频",
+    "description": "文生视频、图生视频、首尾帧与镜头运动提示词",
+    "icon": "video",
+    "order": 2
+  },
+  {
+    "id": "portrait",
+    "name": "人像摄影",
+    "description": "真实人像、胶片质感、光影与妆造方向",
+    "icon": "user",
+    "order": 3
+  },
+  {
+    "id": "product",
+    "name": "产品摄影",
+    "description": "静物、电商主图、材质与棚拍布光",
+    "icon": "box",
+    "order": 4
+  },
+  {
+    "id": "illustration",
+    "name": "插画与动漫",
+    "description": "插画、动漫、绘本与风格化表达",
+    "icon": "feather",
+    "order": 5
+  },
+  {
+    "id": "character",
+    "name": "角色设计",
+    "description": "角色三视图、设定稿与角色一致性控制",
+    "icon": "sparkles",
+    "order": 6
+  },
+  {
+    "id": "scene",
+    "name": "场景设计",
+    "description": "环境概念、氛围场景与世界观搭建",
+    "icon": "layers",
+    "order": 7
+  },
+  {
+    "id": "poster",
+    "name": "海报与排版",
+    "description": "文字渲染、版式设计与商业视觉",
+    "icon": "file-text",
+    "order": 8
+  },
+  {
+    "id": "workflow-prompt",
+    "name": "工作流配套",
+    "description": "配合 ComfyUI 工作流使用的提示词模板",
+    "icon": "workflow",
+    "order": 9
+  },
+  {
+    "id": "utility",
+    "name": "通用辅助",
+    "description": "反推、扩写、润色等辅助型提示词",
+    "icon": "terminal",
+    "order": 10
+  }
+]

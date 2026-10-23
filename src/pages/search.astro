@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Search from '@lucide/astro/icons/search';
+import { getPrompts, getModels, getArticles, getVideos, getProjects } from '../lib/content';
+
+const [prompts, models, articles, videos, projects] = await Promise.all([
+  getPrompts(),
+  getModels(),
+  getArticles(),
+  getVideos(),
+  getProjects(),
+]);
+
+const tabs = [
+  { key: 'all', label: '全部', count: null as number | null },
+  { key: 'prompts', label: '提示词', count: prompts.length },
+  { key: 'models', label: '模型', count: models.length },
+  { key: 'articles', label: '文章', count: articles.length },
+  { key: 'videos', label: '视频', count: videos.length },
+  { key: 'projects', label: '工作流', count: projects.length },
+];
+---
+
+<BaseLayout title="全站搜索" description="搜索站内提示词、模型、技术文章、视频教程与工作流。">
+  <div data-search-page>
+    <section class="search-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="面包屑">
+          <a href="/">首页</a> <span>/</span> <span>搜索</span>
+        </nav>
+        <h1>全站搜索</h1>
+
+        <form action="/search/" method="get" role="search" style="max-width:620px">
+          <div class="search-field">
+            <Search size={18} stroke-width={1.8} />
+            <input
+              type="search"
+              name="q"
+              placeholder="搜索提示词、模型、文章、视频或标签…"
+              data-search-page-input
+              aria-label="搜索关键词"
+              autocomplete="off"
+            />
+            <kbd>Enter</kbd>
+          </div>
+        </form>
+
+        <div class="search-tabs" role="group" aria-label="内容类型">
+          {
+            tabs.map((tab) => (
+              <button
+                class="chip chip--outline"
+                type="button"
+                data-search-type={tab.key}
+                data-label={tab.label}
+                aria-pressed={tab.key === 'all' ? 'true' : 'false'}
+              >
+                {tab.label}
+                {tab.count !== null && <span style="opacity:0.6">{tab.count}</span>}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <div class="container" style="padding-bottom:72px">
+      <p class="search-status" data-search-status>输入关键词开始搜索…</p>
+      <div data-search-results></div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../scripts/global-search';
+</script>
+
+<style>
+  .search-tabs [aria-pressed='true'] {
+    background: var(--walnut);
+    border-color: var(--walnut);
+    color: #fdf9f2;
+  }
+
+  .search-tabs .chip {
+    cursor: pointer;
+    height: 34px;
+    font-size: 0.84rem;
+    padding: 0 13px;
+  }
+</style>

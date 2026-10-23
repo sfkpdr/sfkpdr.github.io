@@ -1,0 +1,64 @@
+---
+import SlidersHorizontal from '@lucide/astro/icons/sliders-horizontal';
+
+export interface FilterOption {
+  value: string;
+  label: string;
+  count?: number;
+}
+
+export interface FilterGroup {
+  key: string;
+  label: string;
+  options: FilterOption[];
+  allLabel?: string;
+  /** 对应卡片上的 data-f-* 字段名，默认与 key 相同 */
+  field?: string;
+}
+
+interface Props {
+  groups: FilterGroup[];
+  variant?: 'sidebar' | 'drawer';
+}
+
+const { groups, variant = 'sidebar' } = Astro.props;
+---
+
+<aside
+  class:list={['filters', variant === 'sidebar' ? 'filters--sidebar' : 'filters--drawer']}
+  data-filters
+  aria-label="筛选条件"
+>
+  <div class="row" style="justify-content:space-between;gap:8px">
+    <span class="eyebrow"><SlidersHorizontal size={13} stroke-width={1.9} /> 筛选</span>
+    <button class="btn btn--quiet btn--sm" type="button" data-reset>清除全部</button>
+  </div>
+
+  {
+    groups.map((group) => (
+      <div class="filter-group" data-filter-group={group.key} data-field={group.field ?? group.key}>
+        <div class="filter-group__title">{group.label}</div>
+        <div class="filter-list" role="group" aria-label={group.label}>
+          <button class="filter-option" type="button" data-filter-option data-value="" aria-pressed="true">
+            {group.allLabel ?? '全部'}
+            <span class="filter-count" data-count-for="__all__" />
+          </button>
+          {group.options.map((option) => (
+            <button
+              class="filter-option"
+              type="button"
+              data-filter-option
+              data-value={option.value}
+              aria-pressed="false"
+            >
+              {option.label}
+              <span class="filter-count" data-count-for={option.value}>
+                {option.count ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+</aside>

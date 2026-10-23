@@ -1,0 +1,221 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PromptCard from '../../components/PromptCard.astro';
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import ArrowUpRight from '@lucide/astro/icons/arrow-up-right';
+import Shield from '@lucide/astro/icons/shield';
+import Check from '@lucide/astro/icons/check';
+import X from '@lucide/astro/icons/x';
+import Calendar from '@lucide/astro/icons/calendar';
+import FileText from '@lucide/astro/icons/file-text';
+import Workflow from '@lucide/astro/icons/workflow';
+import ImageIcon from '@lucide/astro/icons/image';
+import {
+  getModels,
+  getPrompts,
+  getArticles,
+  getProjects,
+  categoryName,
+  formatDate,
+} from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const models = await getModels();
+  return models.map((model) => ({
+    params: { slug: model.data.slug },
+    props: { model },
+  }));
+}) satisfies GetStaticPaths;
+
+const { model } = Astro.props;
+const { Content } = await render(model);
+const d = model.data;
+
+const [prompts, articles, projects] = await Promise.all([getPrompts(), getArticles(), getProjects()]);
+const relatedPrompts = prompts.filter((p) => p.data.model === d.slug);
+const relatedArticles = articles.filter((a) => d.relatedArticles.includes(a.id));
+const relatedProjects = projects.filter((p) => p.data.models.includes(d.slug));
+
+const links = [
+  { label: '官方模型仓库', href: d.modelUrl },
+  d.codeUrl ? { label: '官方代码仓库', href: d.codeUrl } : null,
+  d.docsUrl ? { label: '官方文档', href: d.docsUrl } : null,
+].filter(Boolean) as Array<{ label: string; href: string }>;
+---
+
+<BaseLayout
+  title={d.name}
+  description={`${d.name}（${d.developer}）：${d.summary}`}
+  type="article"
+>
+  <div class="container">
+    <div style="padding-top:20px">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <a href="/models/">模型库</a> <span>/</span>
+        <span>{d.name}</span>
+      </nav>
+    </div>
+
+    <div class="detail">
+      <div>
+        <div class="chip-row" style="margin-bottom:10px">
+          {d.tasks.map((task) => <a class="chip" href={`/models/?tasks=${task}`}>{categoryName(task)}</a>)}
+        </div>
+        <h1>{d.name}</h1>
+        <p class="muted" style="margin-bottom:22px">{d.developer}</p>
+
+        <div class="panel" style="margin-bottom:18px">
+          <div class="panel__title"><span>一句话认识</span></div>
+          <p style="margin:0">{d.summary}</p>
+        </div>
+
+        {
+          (d.pros.length > 0 || d.cons.length > 0) && (
+            <div class="grid grid--2" style="margin-bottom:18px">
+              {d.pros.length > 0 && (
+                <div class="panel">
+                  <div class="panel__title"><span>优势</span></div>
+                  <ul class="check-list">
+                    {d.pros.map((item) => (
+                      <li>
+                        <Check size={15} stroke-width={2} style="color:var(--moss)" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {d.cons.length > 0 && (
+                <div class="panel">
+                  <div class="panel__title"><span>局限</span></div>
+                  <ul class="check-list">
+                    {d.cons.map((item) => (
+                      <li>
+                        <X size={15} stroke-width={2} style="color:var(--rust)" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        {
+          model.body && model.body.trim().length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>能力、部署与使用说明</span></div>
+              <div class="prose">
+                <Content />
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedPrompts.length > 0 && (
+            <section style="margin-top:34px">
+              <div class="section-head" style="margin-bottom:16px">
+                <div>
+                  <span class="eyebrow"><ImageIcon size={13} stroke-width={1.9} /> Prompts</span>
+                  <h2 style="font-size:1.2rem;margin-top:6px">这个模型的提示词（{relatedPrompts.length}）</h2>
+                </div>
+                <a class="btn btn--ghost btn--sm" href={`/prompts/?model=${d.slug}`}>在提示词库中筛选</a>
+              </div>
+              <div class="grid grid--cards">
+                {relatedPrompts.slice(0, 6).map((prompt) => (
+                  <PromptCard prompt={prompt} model={model} />
+                ))}
+              </div>
+            </section>
+          )
+        }
+
+        <div class="row" style="margin-top:30px">
+          <a class="btn btn--ghost btn--sm" href="/models/">
+            <ArrowLeft size={15} stroke-width={1.8} /> 返回模型库
+          </a>
+        </div>
+      </div>
+
+      <aside class="detail__side">
+        <div class="panel">
+          <div class="panel__title"><span>规格与运行</span></div>
+          <dl class="facts">
+            <div><dt>开发者</dt><dd>{d.developer}</dd></div>
+            <div><dt>任务类型</dt><dd>{d.tasks.map(categoryName).join('、') || '—'}</dd></div>
+            {d.params && <div><dt>参数规模</dt><dd>{d.params}</dd></div>}
+            <div><dt>运行方式</dt><dd>{d.runtimes.join('、') || '—'}</dd></div>
+            <div><dt>硬件需求</dt><dd>{d.hardware ?? '暂无实测记录'}</dd></div>
+            <div>
+              <dt>更新时间</dt>
+              <dd>
+                <span class="row" style="gap:5px;justify-content:flex-end">
+                  <Calendar size={13} stroke-width={1.8} /> {formatDate(d.updated)}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="panel">
+          <div class="panel__title"><span>许可证</span></div>
+          <p class="row" style="gap:7px;margin:0 0 8px;font-weight:600;color:var(--walnut)">
+            <Shield size={15} stroke-width={1.8} /> {d.licenseName ?? d.license}
+          </p>
+          <p class="small muted" style="margin:0">
+            {d.licenseNote ?? '许可证细节与商用范围请以官方仓库声明为准。'}
+          </p>
+        </div>
+
+        {
+          links.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>官方来源</span></div>
+              <div class="link-list">
+                {links.map((link) => (
+                  <a href={link.href} target="_blank" rel="noopener noreferrer">
+                    <ArrowUpRight size={15} stroke-width={1.7} /> {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedArticles.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>相关文章</span></div>
+              <div class="link-list">
+                {relatedArticles.map((article) => (
+                  <a href={`/articles/${article.id}/`}>
+                    <FileText size={15} stroke-width={1.7} /> {article.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedProjects.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>相关工作流</span></div>
+              <div class="link-list">
+                {relatedProjects.map((project) => (
+                  <a href={`/projects/${project.id}/`}>
+                    <Workflow size={15} stroke-width={1.7} /> {project.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

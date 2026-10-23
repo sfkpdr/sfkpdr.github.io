@@ -1,0 +1,45 @@
+---
+import Clock from '@lucide/astro/icons/clock';
+import Calendar from '@lucide/astro/icons/calendar';
+import type { Article } from '../lib/content';
+import { articleCategoryName, formatDate } from '../lib/content';
+
+interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+const d = article.data;
+const words = (article.body ?? '').replace(/\s+/g, '').length;
+const minutes = Math.max(1, Math.round(words / 380));
+---
+
+<article
+  class="card article-card"
+  data-item
+  data-id={article.id}
+  data-f-category={d.category}
+  data-f-tags={d.tags.join('|')}
+  data-title={d.title}
+  data-sort={String(d.date.valueOf())}
+  data-search={`${d.title} ${articleCategoryName(d.category)} ${d.summary} ${d.tags.join(' ')}`}
+>
+  {
+    d.cover && (
+      <a class="article-card__cover" href={`/articles/${article.id}/`} tabindex="-1" aria-hidden="true">
+        <img src={d.cover} alt="" loading="lazy" decoding="async" width="800" height="450" />
+      </a>
+    )
+  }
+  <div class="article-card__body">
+    <span class="article-card__cat">{articleCategoryName(d.category)}</span>
+    <h3 class="article-card__title">
+      <a href={`/articles/${article.id}/`}>{d.title}</a>
+    </h3>
+    <p class="article-card__excerpt">{d.summary}</p>
+    <div class="article-card__foot meta">
+      <span class="row" style="gap:5px"><Calendar size={13} stroke-width={1.8} /> {formatDate(d.date)}</span>
+      <span class="row" style="gap:5px"><Clock size={13} stroke-width={1.8} /> {minutes} 分钟</span>
+    </div>
+  </div>
+</article>

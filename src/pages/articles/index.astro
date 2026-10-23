@@ -1,0 +1,128 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import FilterPanel, { type FilterGroup } from '../../components/FilterPanel.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Search from '@lucide/astro/icons/search';
+import SlidersHorizontal from '@lucide/astro/icons/sliders-horizontal';
+import ChevronDown from '@lucide/astro/icons/chevron-down';
+import X from '@lucide/astro/icons/x';
+import { getArticles, articleCategories } from '../../lib/content';
+
+const articles = await getArticles();
+
+const usedCategories = [...new Set(articles.map((a) => a.data.category))];
+const categoryOptions = articleCategories
+  .filter((c) => usedCategories.includes(c.id))
+  .map((c) => ({
+    value: c.id,
+    label: c.name,
+    count: articles.filter((a) => a.data.category === c.id).length,
+  }));
+
+const tagCounts = new Map<string, number>();
+for (const article of articles) {
+  for (const tag of article.data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+}
+const tagOptions = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 24)
+  .map(([value, count]) => ({ value, label: value, count }));
+
+const groups: FilterGroup[] = [
+  { key: 'category', label: '文章分类', options: categoryOptions, allLabel: '全部分类' },
+  { key: 'tag', label: '标签', options: tagOptions, allLabel: '全部标签', field: 'tags' },
+];
+---
+
+<BaseLayout
+  title="技术文章"
+  description="本地 AI 部署、ComfyUI 教程、模型实测与故障排查笔记。"
+>
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <span>技术文章</span>
+      </nav>
+      <h1>技术文章</h1>
+      <p>部署过程、参数对比、报错定位与修复。写给下一个踩同一个坑的人，也写给我自己。</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="library" data-library data-groups="category,tag" data-index="/search-index/articles.json">
+      <FilterPanel groups={groups} variant="sidebar" />
+
+      <div>
+        <div class="mobile-filter-bar">
+          <button class="btn btn--ghost btn--sm" type="button" data-drawer-open>
+            <SlidersHorizontal size={15} stroke-width={1.8} /> 筛选
+          </button>
+        </div>
+
+        <div class="library__head">
+          <div class="search-field" style="flex:1;min-width:220px;max-width:420px">
+            <Search size={17} stroke-width={1.8} />
+            <input type="search" placeholder="搜索文章标题或内容…" data-filter-search aria-label="搜索文章" />
+          </div>
+          <div class="row" style="gap:10px">
+            <span class="library__count">共 <b data-count>{articles.length}</b> 篇</span>
+            <label class="select-wrap">
+              <select aria-label="排序方式" data-sort>
+                <option value="">最新发布</option>
+                <option value="oldest">最早发布</option>
+                <option value="title">按标题</option>
+              </select>
+              <ChevronDown size={15} stroke-width={1.8} />
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-summary" data-summary></div>
+
+        {
+          articles.length > 0 ? (
+            <div class="grid grid--wide" data-grid>
+              {articles.map((article) => (
+                <ArticleCard article={article} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="还没有发布文章"
+              text="在手机端后台新建一篇技术文章，正文支持 Markdown，保存后自动出现在列表与搜索里。"
+            >
+              <a class="btn btn--primary btn--sm" href="/admin/">打开手机端后台</a>
+            </EmptyState>
+          )
+        }
+
+        <div data-no-result hidden>
+          <EmptyState title="没有匹配的文章" text="换个关键词，或者清空筛选条件。">
+            <button class="btn btn--ghost btn--sm" type="button" data-reset>清除全部筛选</button>
+          </EmptyState>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-drawer" data-drawer data-open="false">
+    <div class="filter-drawer__scrim" data-drawer-close></div>
+    <div class="filter-drawer__panel">
+      <div class="filter-drawer__head">
+        <strong style="font-size:1rem">筛选条件</strong>
+        <button class="icon-btn" type="button" data-drawer-close aria-label="关闭筛选">
+          <X size={17} stroke-width={1.8} />
+        </button>
+      </div>
+      <FilterPanel groups={groups} variant="drawer" />
+      <button class="btn btn--primary btn--block" type="button" data-drawer-close style="margin-top:16px">
+        查看结果
+      </button>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../../scripts/library-filter';
+</script>

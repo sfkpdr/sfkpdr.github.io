@@ -1,0 +1,284 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PromptCard from '../components/PromptCard.astro';
+import ModelCard from '../components/ModelCard.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import VideoCard from '../components/VideoCard.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import Search from '@lucide/astro/icons/search';
+import ArrowRight from '@lucide/astro/icons/arrow-right';
+import ImageIcon from '@lucide/astro/icons/image';
+import VideoIcon from '@lucide/astro/icons/video';
+import Sparkles from '@lucide/astro/icons/sparkles';
+import Workflow from '@lucide/astro/icons/workflow';
+import Layers from '@lucide/astro/icons/layers';
+import Boxes from '@lucide/astro/icons/boxes';
+import FileText from '@lucide/astro/icons/file-text';
+import { getArticles, getModels, getProjects, getPrompts, getVideos, pickModels, site } from '../lib/content';
+
+const [prompts, models, articles, videos, projects] = await Promise.all([
+  getPrompts(),
+  getModels(),
+  getArticles(),
+  getVideos(),
+  getProjects(),
+]);
+
+const modelIndex = new Map(models.map((m) => [m.data.slug, m]));
+
+const featuredPrompts = prompts.slice(0, 6);
+const featuredModels = models.slice(0, 3);
+const latestArticles = articles.slice(0, 3);
+const latestVideos = videos.slice(0, 3);
+const latestProjects = projects.slice(0, 3);
+
+const promptCountByModel = new Map<string, number>();
+for (const p of prompts) {
+  promptCountByModel.set(p.data.model, (promptCountByModel.get(p.data.model) ?? 0) + 1);
+}
+
+const entryTiles = [
+  { icon: ImageIcon, label: 'AI 生图', href: '/prompts/?category=text-to-image', desc: '文生图 · 图生图' },
+  { icon: VideoIcon, label: 'AI 视频', href: '/prompts/?category=text-to-video', desc: '镜头 · 运动' },
+  { icon: Sparkles, label: '角色设计', href: '/prompts/?category=character', desc: '一致性 · 设定稿' },
+  { icon: Workflow, label: '工作流', href: '/prompts/?category=workflow-prompt', desc: 'ComfyUI 配套' },
+];
+---
+
+<BaseLayout description={site.description}>
+  <section class="hero">
+    <div class="container hero__inner">
+      <div>
+        <span class="eyebrow">开源模型 · 实测记录 · 可复用资源</span>
+        <h1>让 AI <em>真正用起来</em></h1>
+        <p class="hero__lead">
+          开源模型、实测提示词、技术教程与 AI 创作实践。这里记录我用 ComfyUI 与本地模型跑出来的真实结果，
+          每条提示词都配着它自己生成的那张图。
+        </p>
+
+        <form class="hero__search" action="/search/" method="get" role="search">
+          <div class="search-field">
+            <Search size={18} stroke-width={1.8} />
+            <input
+              type="search"
+              name="q"
+              placeholder="搜索提示词、模型、文章或标签…"
+              aria-label="全站搜索"
+            />
+            <kbd>Enter</kbd>
+          </div>
+        </form>
+
+        <div class="hero__actions" style="margin-top:18px">
+          <a class="btn btn--primary" href="/prompts/">
+            探索提示词 <ArrowRight size={16} stroke-width={1.9} />
+          </a>
+          <a class="btn btn--ghost" href="/models/">
+            <Boxes size={16} stroke-width={1.8} /> 浏览模型库
+          </a>
+        </div>
+
+        <div class="hero__stats">
+          <div class="hero__stat"><b>{prompts.length}</b><span>条提示词</span></div>
+          <div class="hero__stat"><b>{models.length}</b><span>个模型</span></div>
+          <div class="hero__stat"><b>{articles.length}</b><span>篇技术文章</span></div>
+          <div class="hero__stat"><b>{videos.length}</b><span>个视频教程</span></div>
+        </div>
+      </div>
+
+      <div class="hero__panel">
+        <div class="hero__panel-grid">
+          {
+            entryTiles.map((tile) => {
+              const TileIcon = tile.icon;
+              return (
+                <a class="hero__tile" href={tile.href}>
+                  <TileIcon size={18} stroke-width={1.7} />
+                  <b>{tile.label}</b>
+                  <span>{tile.desc}</span>
+                </a>
+              );
+            })
+          }
+        </div>
+        <p class="hero__panel-note">
+          <Layers size={13} stroke-width={1.8} />
+          按创作任务找资源，比翻收藏夹快
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 精选提示词 -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><ImageIcon size={13} stroke-width={1.9} /> Prompt Library</span>
+          <h2>精选提示词</h2>
+          <p>图片与提示词一一对应，点一下就能复制走。</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/prompts/">
+          全部提示词 <ArrowRight size={14} stroke-width={1.9} />
+        </a>
+      </div>
+
+      {
+        featuredPrompts.length > 0 ? (
+          <div class="grid grid--cards">
+            {featuredPrompts.map((prompt, index) => (
+              <PromptCard
+                prompt={prompt}
+                model={modelIndex.get(prompt.data.model)}
+                eager={index < 3}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="还没有公开的提示词"
+            text="在手机端打开内容管理后台，上传一张效果图并填写提示词，保存后这里就会自动出现。"
+          >
+            <a class="btn btn--primary btn--sm" href="/admin/">去后台上传第一条</a>
+          </EmptyState>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 精选模型 -->
+  <section class="section section--band">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><Boxes size={13} stroke-width={1.9} /> Model Library</span>
+          <h2>精选模型</h2>
+          <p>只用真正跑过、能核实来源的开源或开放权重模型。</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/models/">
+          全部模型 <ArrowRight size={14} stroke-width={1.9} />
+        </a>
+      </div>
+
+      {
+        featuredModels.length > 0 ? (
+          <div class="grid grid--3">
+            {featuredModels.map((model) => (
+              <ModelCard model={model} promptCount={promptCountByModel.get(model.data.slug) ?? 0} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="模型库还没有内容" text="模型资料同样是内容文件，添加后自动出现在这里。" />
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 最新技术文章 -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><FileText size={13} stroke-width={1.9} /> Notes</span>
+          <h2>最新技术文章</h2>
+          <p>部署、调试、翻车与修复，都写在文章里。</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/articles/">
+          全部文章 <ArrowRight size={14} stroke-width={1.9} />
+        </a>
+      </div>
+
+      {
+        latestArticles.length > 0 ? (
+          <div class="grid grid--3">
+            {latestArticles.map((article) => (
+              <ArticleCard article={article} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="还没有发布文章" text="把踩坑过程写成 Markdown，保存后就是一篇可检索的文章。" />
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 最新视频 -->
+  <section class="section section--band">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><VideoIcon size={13} stroke-width={1.9} /> Videos</span>
+          <h2>最新视频教程</h2>
+          <p>视频托管在外部平台，站内只放封面、说明和播放入口。</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/videos/">
+          全部视频 <ArrowRight size={14} stroke-width={1.9} />
+        </a>
+      </div>
+
+      {
+        latestVideos.length > 0 ? (
+          <div class="grid grid--3">
+            {latestVideos.map((video) => (
+              <VideoCard
+                video={video}
+                models={pickModels(video.data.models, modelIndex)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="视频教程待更新"
+            text="先把视频传到 B 站或 YouTube，再在后台填上标题、封面和链接即可。"
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 最新工作流与作品 -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><Workflow size={13} stroke-width={1.9} /> Workflows</span>
+          <h2>最新工作流与作品</h2>
+          <p>从作品出发，顺着提示词、模型、教程与工作流一路走下去。</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/projects/">
+          全部作品 <ArrowRight size={14} stroke-width={1.9} />
+        </a>
+      </div>
+
+      {
+        latestProjects.length > 0 ? (
+          <div class="grid grid--3">
+            {latestProjects.map((project) => (
+              <ProjectCard
+                project={project}
+                models={pickModels(project.data.models, modelIndex)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="还没有公开的作品" text="作品卡片会把提示词、模型、教程和可下载的工作流串在一起。" />
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 关于我（简化版） -->
+  <section class="section section--band">
+    <div class="container">
+      <div class="notice">
+        <Sparkles size={16} stroke-width={1.8} />
+        <span>
+          我是杨生，2025 年开始自学 AI 工具，主要折腾 ComfyUI、开源生图与视频模型。
+          这个站是我的工作台：跑通的东西留下来，翻车的过程也写下来。想了解完整经历可以看
+          <a href="/about/">关于我</a>。
+        </span>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

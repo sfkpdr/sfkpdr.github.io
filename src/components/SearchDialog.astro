@@ -1,0 +1,121 @@
+---
+import Search from '@lucide/astro/icons/search';
+import X from '@lucide/astro/icons/x';
+---
+
+<dialog class="search-dialog" data-search-dialog aria-label="全站搜索">
+  <form class="search-dialog__form" action="/search/" method="get" role="search">
+    <div class="search-field">
+      <Search size={18} stroke-width={1.8} />
+      <input
+        type="search"
+        name="q"
+        placeholder="搜索提示词、模型、文章、视频或标签…"
+        autocomplete="off"
+        data-search-input
+        aria-label="搜索关键词"
+      />
+      <kbd>Enter</kbd>
+    </div>
+    <div class="search-dialog__hint">
+      <span>按 <kbd>/</kbd> 或 <kbd>Ctrl</kbd> + <kbd>K</kbd> 快速打开</span>
+      <button type="button" class="btn btn--quiet btn--sm" data-search-close>
+        <X size={14} stroke-width={1.8} /> 关闭
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  .search-dialog {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: 620px;
+    width: calc(100% - 32px);
+    margin: 14vh auto auto;
+  }
+
+  .search-dialog::backdrop {
+    background: rgba(54, 49, 43, 0.42);
+    backdrop-filter: blur(3px);
+  }
+
+  .search-dialog__form {
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: 0 24px 60px rgba(54, 49, 43, 0.24);
+  }
+
+  .search-dialog__hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    padding: 0 4px;
+    flex-wrap: wrap;
+  }
+
+  .search-dialog kbd {
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--linen);
+    color: var(--ink-soft);
+  }
+</style>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
+  const input = dialog?.querySelector<HTMLInputElement>('[data-search-input]');
+
+  function openDialog() {
+    if (!dialog) return;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    requestAnimationFrame(() => input?.focus());
+  }
+
+  function closeDialog() {
+    if (!dialog) return;
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  }
+
+  document.querySelectorAll('[data-search-open]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      openDialog();
+    });
+  });
+
+  dialog?.querySelector('[data-search-close]')?.addEventListener('click', closeDialog);
+
+  // 点击遮罩关闭
+  dialog?.addEventListener('click', (event) => {
+    if (event.target === dialog) closeDialog();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const target = event.target as HTMLElement | null;
+    const typing =
+      target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+
+    if ((event.key === 'k' || event.key === 'K') && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      openDialog();
+      return;
+    }
+
+    if (event.key === '/' && !typing) {
+      event.preventDefault();
+      openDialog();
+    }
+  });
+</script>

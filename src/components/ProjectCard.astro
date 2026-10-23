@@ -1,0 +1,53 @@
+---
+import Workflow from '@lucide/astro/icons/workflow';
+import ImageIcon from '@lucide/astro/icons/image';
+import VideoIcon from '@lucide/astro/icons/video';
+import type { Project, Model } from '../lib/content';
+import { formatDate } from '../lib/content';
+
+interface Props {
+  project: Project;
+  models?: Model[];
+}
+
+const { project, models = [] } = Astro.props;
+const d = project.data;
+
+const typeMeta = {
+  image: { label: '图像作品', icon: ImageIcon },
+  video: { label: '视频作品', icon: VideoIcon },
+  workflow: { label: '工作流', icon: Workflow },
+} as const;
+
+const meta = typeMeta[d.type];
+const TypeIcon = meta.icon;
+---
+
+<article
+  class="card"
+  data-item
+  data-id={project.id}
+  data-f-type={d.type}
+  data-f-models={d.models.join('|')}
+  data-title={d.title}
+  data-sort={String(d.date.valueOf())}
+  data-search={`${d.title} ${d.summary} ${d.tags.join(' ')} ${meta.label}`}
+>
+  <a class="project-card__media" href={`/projects/${project.id}/`} tabindex="-1" aria-hidden="true">
+    <img src={d.cover} alt="" loading="lazy" decoding="async" width="900" height="600" />
+  </a>
+  <div class="prompt-card__badges">
+    <span class="badge"><TypeIcon size={12} stroke-width={2} /> {meta.label}</span>
+  </div>
+
+  <div class="article-card__body">
+    <h3 class="article-card__title">
+      <a href={`/projects/${project.id}/`}>{d.title}</a>
+    </h3>
+    <p class="article-card__excerpt">{d.summary}</p>
+    <div class="article-card__foot meta">
+      <span>{formatDate(d.date)}</span>
+      {models.length > 0 && <span>{models.map((m) => m.data.name).join(' · ')}</span>}
+    </div>
+  </div>
+</article>

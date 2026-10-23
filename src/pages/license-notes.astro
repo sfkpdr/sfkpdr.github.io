@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Shield from '@lucide/astro/icons/shield';
+import ExternalLink from '@lucide/astro/icons/external-link';
+import { getModels, formatDate } from '../lib/content';
+
+const models = await getModels();
+---
+
+<BaseLayout
+  title="资源来源与许可证说明"
+  description="站内提示词、图片、模型资料与工作流的来源说明，以及模型许可证的边界。"
+>
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <span>资源来源与许可证</span>
+      </nav>
+      <h1>资源来源与许可证说明</h1>
+      <p>把话说清楚：哪些是我做的，哪些是别人的，许可边界在哪里。</p>
+    </div>
+  </section>
+
+  <div class="container container--narrow" style="padding:38px 24px 72px">
+    <div class="prose">
+      <h2>提示词与效果图</h2>
+      <p>
+        站内提示词由我在实际创作过程中编写或调整，配套效果图是使用对应模型本地生成的结果
+        （标注「示例内容」的条目除外，那些是占位示意图）。提示词与图片按条目一一对应，
+        通过内容文件中的固定字段关联，不依赖文件名猜测。
+      </p>
+
+      <h2>模型与权重</h2>
+      <p>
+        模型的代码、权重与文档版权归各自开发者所有。站内的模型资料是整理与使用记录，
+        <strong>不重新分发权重</strong>，只提供官方仓库链接。
+      </p>
+      <p>
+        许可证一栏按官方仓库声明填写，并区分三种情况：代码开源、权重开放（可下载但有使用限制）、
+        仅 API 可用。涉及商用请务必阅读官方 LICENSE 原文，本站结论只作提示，不构成授权。
+      </p>
+
+      <h2>当前收录模型的许可证</h2>
+      <p class="small muted">下表由内容文件自动生成，随模型库更新。</p>
+
+      <table>
+        <thead>
+          <tr><th>模型</th><th>开发者</th><th>许可证</th><th>更新</th></tr>
+        </thead>
+        <tbody>
+          {
+            models.map((model) => (
+              <tr>
+                <td><a href={`/models/${model.data.slug}/`}>{model.data.name}</a></td>
+                <td>{model.data.developer}</td>
+                <td>{model.data.licenseName ?? model.data.license}</td>
+                <td>{formatDate(model.data.updated)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <h2>工作流文件</h2>
+      <p>
+        站内提供下载的 ComfyUI 工作流如无特别说明，均为我自行搭建，采用 CC BY-NC-SA 4.0 授权：
+        可自由使用与修改，需署名、不得直接商用、衍生作品需同协议共享。
+        工作流中引用的第三方插件与节点，遵循各自项目的许可证。
+      </p>
+
+      <h2>文章与转载</h2>
+      <p>
+        站内文章为原创记录，转载请注明作者与原文链接。若文中引用了他人结论或数据，
+        会在文中标注来源。
+      </p>
+
+      <div class="notice" style="margin-top:26px">
+        <Shield size={16} stroke-width={1.8} />
+        <span>
+          发现站内资料来源标注有误或许可证过期，欢迎在
+          <a href="https://github.com/sfkpdr/sfkpdr.github.io/issues" target="_blank" rel="noopener noreferrer">
+            GitHub Issues <ExternalLink size={12} stroke-width={2} style="display:inline;vertical-align:-1px" />
+          </a>
+          指出，我会尽快更正。
+        </span>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

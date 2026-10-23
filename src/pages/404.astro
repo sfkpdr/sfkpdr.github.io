@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import Search from '@lucide/astro/icons/search';
+import { getPrompts, getModels, getArticles } from '../lib/content';
+
+const [prompts, models, articles] = await Promise.all([getPrompts(), getModels(), getArticles()]);
+const picks = [
+  ...prompts.slice(0, 3).map((p) => ({ href: `/prompts/${p.id}/`, label: p.data.title, kind: '提示词' })),
+  ...models.slice(0, 2).map((m) => ({ href: `/models/${m.data.slug}/`, label: m.data.name, kind: '模型' })),
+  ...articles.slice(0, 2).map((a) => ({ href: `/articles/${a.id}/`, label: a.data.title, kind: '文章' })),
+];
+---
+
+<BaseLayout title="页面不存在" description="404 · 找不到这个页面" noindex={true}>
+  <div class="container container--narrow" style="padding:80px 24px 96px;text-align:center">
+    <span class="eyebrow">404</span>
+    <h1 style="font-size:clamp(1.8rem,4vw,2.4rem);margin:10px 0 12px">这一页好像还没被生成出来</h1>
+    <p class="muted" style="max-width:48ch;margin:0 auto 26px">
+      可能是链接写错了，也可能内容被改动了地址。试试搜索，或者从下面这些入口进去。
+    </p>
+
+    <div class="row" style="justify-content:center;margin-bottom:34px">
+      <a class="btn btn--primary" href="/">
+        <ArrowLeft size={16} stroke-width={1.9} /> 回到首页
+      </a>
+      <a class="btn btn--ghost" href="/search/">
+        <Search size={16} stroke-width={1.8} /> 全站搜索
+      </a>
+    </div>
+
+    {
+      picks.length > 0 && (
+        <div class="panel" style="text-align:left">
+          <div class="panel__title"><span>也许你在找</span></div>
+          <div class="link-list">
+            {picks.map((pick) => (
+              <a href={pick.href}>
+                <span class="chip chip--outline">{pick.kind}</span> {pick.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>

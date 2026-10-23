@@ -1,0 +1,754 @@
+# =============================================================================
+# Pages CMS 配置（手机端内容管理后台）
+#
+# 用法：手机浏览器打开 https://app.pagescms.org/ → 用 GitHub 登录 →
+#      选择仓库 sfkpdr/sfkpdr.github.io → 左侧就是下面定义的五个栏目。
+#
+# 重要：这里的字段名必须与 src/content.config.ts 中的 schema 完全一致，
+#      图片目录 / 公开路径也必须与 public/images/** 对应，否则网站会读不到内容。
+# =============================================================================
+
+media:
+  - name: prompt_images
+    label: 提示词效果图
+    input: public/images/prompts
+    output: /images/prompts
+    rename: random
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp]
+
+  - name: model_images
+    label: 模型配图
+    input: public/images/models
+    output: /images/models
+    rename: random
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp]
+
+  - name: article_images
+    label: 文章封面与配图
+    input: public/images/articles
+    output: /images/articles
+    rename: random
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp]
+
+  - name: video_covers
+    label: 视频封面
+    input: public/images/videos
+    output: /images/videos
+    rename: random
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp]
+
+  - name: project_covers
+    label: 作品与工作流预览图
+    input: public/images/projects
+    output: /images/projects
+    rename: random
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp]
+
+  - name: workflow_files
+    label: 工作流文件
+    input: public/downloads
+    output: /downloads
+    rename: safe
+    extensions: [json, zip, txt]
+
+content:
+  # ---------------------------------------------------------------------------
+  # 1. 提示词库（核心模块，优先维护）
+  # ---------------------------------------------------------------------------
+  - name: prompts
+    label: 提示词库
+    type: collection
+    path: src/content/prompts
+    format: yaml-frontmatter
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      primary: title
+      sort: updated
+      order: desc
+      search: [title, tags, model]
+      fields: [title, model, category, status]
+    fields:
+      - name: title
+        label: 提示词标题
+        type: string
+        required: true
+        options:
+          maxlength: 60
+        description: 会用作文档标题和列表标题，写清画面主题，例如「窗边自然光人像」
+
+      - name: slug
+        label: 英文 slug（决定网址与文件名）
+        type: string
+        required: true
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
+          message: 只能用小写英文字母、数字和连字符，例如 window-light-portrait
+        description: 建议用画面内容拼写，全站唯一；改 slug 等于换网址，旧链接会失效
+
+      - name: image
+        label: 生成效果图（必填）
+        type: image
+        required: true
+        options:
+          media: prompt_images
+          categories: [image]
+        description: 必须是与这条提示词对应的那张图，不接受概念图或无关配图
+
+      - name: model
+        label: 适用模型
+        type: reference
+        required: true
+        options:
+          collection: models
+          value: "{fields.slug}"
+          label: "{fields.name}"
+          search: "name,fields.developer"
+        description: 从模型库里选；模型库里没有的模型，先去「模型库」新增一条
+
+      - name: category
+        label: 任务分类
+        type: select
+        required: true
+        options:
+          values:
+            - name: text-to-image
+              label: AI 生图
+            - name: text-to-video
+              label: AI 视频
+            - name: portrait
+              label: 人像摄影
+            - name: product
+              label: 产品摄影
+            - name: illustration
+              label: 插画与动漫
+            - name: character
+              label: 角色设计
+            - name: scene
+              label: 场景设计
+            - name: poster
+              label: 海报与排版
+            - name: workflow-prompt
+              label: 工作流配套
+            - name: utility
+              label: 通用辅助
+
+      - name: prompt
+        label: 完整提示词（必填）
+        type: text
+        required: true
+        options:
+          minlength: 10
+        description: 粘贴可以原样使用的完整提示词，不要带「提示词：」之类的前缀
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+        description: 每行一个，例如 人像 / 自然光 / 写实。标签会自动出现在筛选栏
+
+      - name: status
+        label: 发布状态
+        type: select
+        required: true
+        options:
+          values:
+            - name: draft
+              label: 草稿（不在网站上显示）
+            - name: published
+              label: 已发布（公开显示）
+        description: 只有「已发布」才会出现在列表、详情页和搜索里
+
+      - name: tested
+        label: 是否本机实测过
+        type: boolean
+        description: 勾选后卡片会显示「已实测」徽章，请只在确实跑过时勾选
+
+      - name: testedAt
+        label: 实测日期
+        type: date
+        description: 勾了实测才需要填
+
+      - name: version
+        label: 模型版本
+        type: string
+        description: 例如 fp8_e4m3fn、GGUF Q8_0、官方 v1.0
+
+      - name: style
+        label: 风格
+        type: string
+        description: 例如 胶片、极简、暗调
+
+      - name: negative
+        label: 负向提示词
+        type: text
+        description: 没有就留空，留空时详情页不会显示这一块
+
+      - name: params
+        label: 生成参数
+        type: text
+        description: |-
+          每行一条「键: 值」，例如：
+          分辨率: 1024 × 1024
+          步数: 24
+          guidance: 3.5
+          以 # 开头的行会被忽略
+
+      - name: relatedArticles
+        label: 相关技术文章
+        type: reference
+        options:
+          collection: articles
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: relatedProjects
+        label: 相关工作流与作品
+        type: reference
+        options:
+          collection: projects
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: updated
+        label: 更新时间
+        type: date
+        required: true
+        description: 列表默认按这个时间倒序排列
+
+      - name: body
+        label: 使用说明与调整建议（支持 Markdown）
+        type: rich-text
+        options:
+          format: markdown
+          media: prompt_images
+          switcher: true
+
+  # ---------------------------------------------------------------------------
+  # 2. 模型库
+  # ---------------------------------------------------------------------------
+  - name: models
+    label: 模型库
+    type: collection
+    path: src/content/models
+    format: yaml-frontmatter
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      primary: name
+      sort: name
+      order: asc
+      search: [name, developer]
+      fields: [name, developer, license, status]
+    fields:
+      - name: name
+        label: 模型名称
+        type: string
+        required: true
+        description: 使用官方写法，例如 Qwen-Image、FLUX.1 [dev]、Wan2.2
+
+      - name: slug
+        label: 英文 slug（决定网址与文件名）
+        type: string
+        required: true
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9.]+)*$"
+          message: 只能用小写英文字母、数字、点和连字符，例如 flux1-dev
+        description: 提示词会引用这个值，创建后尽量不要再改
+
+      - name: developer
+        label: 开发者 / 团队
+        type: string
+        required: true
+
+      - name: summary
+        label: 一句话介绍
+        type: text
+        required: true
+        description: 说清它擅长什么、适合谁用，不超过 100 字最好
+
+      - name: tasks
+        label: 任务类型
+        type: select
+        options:
+          multiple: true
+          values:
+            - name: text-to-image
+              label: AI 生图
+            - name: text-to-video
+              label: AI 视频
+            - name: portrait
+              label: 人像摄影
+            - name: product
+              label: 产品摄影
+            - name: illustration
+              label: 插画与动漫
+            - name: character
+              label: 角色设计
+            - name: scene
+              label: 场景设计
+            - name: poster
+              label: 海报与排版
+            - name: workflow-prompt
+              label: 工作流配套
+            - name: utility
+              label: 通用辅助
+
+      - name: runtimes
+        label: 支持的运行方式
+        type: select
+        options:
+          multiple: true
+          values: [ComfyUI, Diffusers, Transformers, llama.cpp, Ollama, 其他]
+
+      - name: license
+        label: 许可证（简短写法）
+        type: string
+        required: true
+        description: 用于筛选与卡片展示，例如 Apache-2.0、MIT、FLUX.1 [dev] 非商用许可
+
+      - name: licenseName
+        label: 许可证全名
+        type: string
+        description: 例如 FLUX.1 [dev] Non-Commercial License
+
+      - name: licenseNote
+        label: 许可证说明与商用限制
+        type: text
+        description: 写清能不能商用、有什么附加限制；不确定就写「以官方 LICENSE 为准」
+
+      - name: params
+        label: 参数规模
+        type: string
+        description: 例如 20B（BF16），社区另有 FP8 / GGUF 量化
+
+      - name: hardware
+        label: 硬件需求（只写实测环境）
+        type: string
+        description: 例如「RTX 4070 Ti 12GB，FP8，1024×1024 约 12 秒」。没实测就留空
+
+      - name: pros
+        label: 优势
+        type: string
+        list: true
+        description: 每行一条
+
+      - name: cons
+        label: 局限
+        type: string
+        list: true
+        description: 每行一条
+
+      - name: modelUrl
+        label: 官方模型仓库链接
+        type: string
+        required: true
+        description: Hugging Face 或 ModelScope 的模型页面地址
+
+      - name: codeUrl
+        label: 官方代码仓库链接
+        type: string
+
+      - name: docsUrl
+        label: 官方文档 / 技术报告链接
+        type: string
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+
+      - name: relatedArticles
+        label: 相关技术文章
+        type: reference
+        options:
+          collection: articles
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: status
+        label: 发布状态
+        type: select
+        required: true
+        options:
+          values:
+            - name: draft
+              label: 草稿（不在网站上显示）
+            - name: published
+              label: 已发布（公开显示）
+
+      - name: updated
+        label: 更新时间
+        type: date
+        required: true
+
+      - name: body
+        label: 能力、部署与使用说明（支持 Markdown）
+        type: rich-text
+        options:
+          format: markdown
+          media: model_images
+          switcher: true
+
+  # ---------------------------------------------------------------------------
+  # 3. 技术文章
+  # ---------------------------------------------------------------------------
+  - name: articles
+    label: 技术文章
+    type: collection
+    path: src/content/articles
+    format: yaml-frontmatter
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      primary: title
+      sort: date
+      order: desc
+      search: [title, summary, tags]
+      fields: [title, category, date, status]
+    fields:
+      - name: title
+        label: 文章标题
+        type: string
+        required: true
+
+      - name: slug
+        label: 英文 slug（决定网址与文件名）
+        type: string
+        required: true
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
+          message: 只能用小写英文字母、数字和连字符
+
+      - name: summary
+        label: 摘要
+        type: text
+        required: true
+        description: 会显示在列表卡片和搜索结果里
+
+      - name: category
+        label: 文章分类
+        type: select
+        required: true
+        options:
+          values:
+            - name: model-review
+              label: 开源模型实测
+            - name: local-deploy
+              label: 本地 AI 部署
+            - name: comfyui
+              label: ComfyUI 教程
+            - name: image-tips
+              label: AI 生图技巧
+            - name: video
+              label: AI 视频制作
+            - name: prompt-engineering
+              label: 提示词工程
+            - name: troubleshooting
+              label: 故障排查
+            - name: automation
+              label: 自动化创作
+            - name: notes
+              label: 创作随笔
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+
+      - name: date
+        label: 发布日期
+        type: date
+        required: true
+
+      - name: updated
+        label: 最后更新
+        type: date
+
+      - name: cover
+        label: 封面图（可选）
+        type: image
+        options:
+          media: article_images
+          categories: [image]
+
+      - name: models
+        label: 关联模型
+        type: reference
+        options:
+          collection: models
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.name}"
+
+      - name: prompts
+        label: 关联提示词
+        type: reference
+        options:
+          collection: prompts
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: projects
+        label: 关联工作流与作品
+        type: reference
+        options:
+          collection: projects
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: featured
+        label: 首页精选
+        type: boolean
+
+      - name: status
+        label: 发布状态
+        type: select
+        required: true
+        options:
+          values:
+            - name: draft
+              label: 草稿（不在网站上显示）
+            - name: published
+              label: 已发布（公开显示）
+
+      - name: body
+        label: 正文（Markdown）
+        type: rich-text
+        options:
+          format: markdown
+          media: article_images
+          switcher: true
+
+  # ---------------------------------------------------------------------------
+  # 4. 视频教程
+  # ---------------------------------------------------------------------------
+  - name: videos
+    label: 视频教程
+    type: collection
+    path: src/content/videos
+    format: yaml-frontmatter
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      primary: title
+      sort: date
+      order: desc
+      search: [title, summary]
+      fields: [title, platform, date, status]
+    fields:
+      - name: title
+        label: 视频标题
+        type: string
+        required: true
+
+      - name: slug
+        label: 英文 slug（决定文件名）
+        type: string
+        required: true
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
+          message: 只能用小写英文字母、数字和连字符
+
+      - name: summary
+        label: 简介
+        type: text
+        required: true
+
+      - name: cover
+        label: 封面图（必填）
+        type: image
+        required: true
+        options:
+          media: video_covers
+          categories: [image]
+        description: 建议 16:9，宽度 1280 左右，封面比视频内容更影响点击
+
+      - name: videoUrl
+        label: 视频地址（必填）
+        type: string
+        required: true
+        description: B 站 / YouTube / 其他平台的完整播放页链接，不要把视频文件传进仓库
+
+      - name: platform
+        label: 平台
+        type: select
+        options:
+          values: [Bilibili, YouTube, 抖音, 微信视频号, 其他]
+        description: 用于筛选
+
+      - name: duration
+        label: 时长
+        type: string
+        description: 例如 08:12，不确定就留空
+
+      - name: models
+        label: 适用模型
+        type: reference
+        options:
+          collection: models
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.name}"
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+
+      - name: date
+        label: 发布日期
+        type: date
+        required: true
+
+      - name: status
+        label: 发布状态
+        type: select
+        required: true
+        options:
+          values:
+            - name: draft
+              label: 草稿（不在网站上显示）
+            - name: published
+              label: 已发布（公开显示）
+
+
+  # ---------------------------------------------------------------------------
+  # 5. 工作流与作品
+  # ---------------------------------------------------------------------------
+  - name: projects
+    label: 工作流与作品
+    type: collection
+    path: src/content/projects
+    format: yaml-frontmatter
+    filename:
+      template: "{fields.slug}.md"
+      field: create
+    view:
+      primary: title
+      sort: date
+      order: desc
+      search: [title, summary]
+      fields: [title, type, date, status]
+    fields:
+      - name: title
+        label: 作品 / 工作流标题
+        type: string
+        required: true
+
+      - name: slug
+        label: 英文 slug（决定网址与文件名）
+        type: string
+        required: true
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
+          message: 只能用小写英文字母、数字和连字符
+
+      - name: summary
+        label: 一句话说明
+        type: text
+        required: true
+
+      - name: cover
+        label: 预览图（必填）
+        type: image
+        required: true
+        options:
+          media: project_covers
+          categories: [image]
+
+      - name: type
+        label: 类型
+        type: select
+        required: true
+        options:
+          values:
+            - name: image
+              label: 图像作品
+            - name: video
+              label: 视频作品
+            - name: workflow
+              label: 工作流
+
+      - name: models
+        label: 关联模型
+        type: reference
+        options:
+          collection: models
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.name}"
+
+      - name: prompts
+        label: 关联提示词
+        type: reference
+        options:
+          collection: prompts
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: articles
+        label: 配套教程
+        type: reference
+        options:
+          collection: articles
+          multiple: true
+          value: "{fields.slug}"
+          label: "{fields.title}"
+
+      - name: videoUrl
+        label: 演示视频地址
+        type: string
+        description: 可选，填了会在详情页显示「观看演示」
+
+      - name: workflowFile
+        label: 工作流文件（可选）
+        type: file
+        options:
+          media: workflow_files
+          categories: [document]
+        description: ComfyUI 导出的 JSON，或打包好的 zip；建议小于 2MB
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+
+      - name: date
+        label: 发布日期
+        type: date
+        required: true
+
+      - name: status
+        label: 发布状态
+        type: select
+        required: true
+        options:
+          values:
+            - name: draft
+              label: 草稿（不在网站上显示）
+            - name: published
+              label: 已发布（公开显示）
+
+      - name: body
+        label: 创作说明与使用注意事项（Markdown）
+        type: rich-text
+        options:
+          format: markdown
+          media: project_covers
+          switcher: true

@@ -1,0 +1,169 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PromptCard from '../../components/PromptCard.astro';
+import CopyButton from '../../components/CopyButton.astro';
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import ArrowUpRight from '@lucide/astro/icons/arrow-up-right';
+import Download from '@lucide/astro/icons/download';
+import Boxes from '@lucide/astro/icons/boxes';
+import FileText from '@lucide/astro/icons/file-text';
+import Calendar from '@lucide/astro/icons/calendar';
+import { formatDate, getArticles, getModels, getProjects, getPrompts, pickModels } from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { id: project.id }, props: { project } }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+
+const [models, prompts, articles] = await Promise.all([getModels(), getPrompts(), getArticles()]);
+const modelIndex = new Map(models.map((m) => [m.data.slug, m]));
+const relatedModels = pickModels(d.models, modelIndex);
+const relatedPrompts = prompts.filter((p) => d.prompts.includes(p.id));
+const relatedArticles = articles.filter((a) => d.articles.includes(a.id));
+
+const typeLabels: Record<string, string> = {
+  image: '图像作品',
+  video: '视频作品',
+  workflow: '工作流',
+};
+---
+
+<BaseLayout title={d.title} description={d.summary} image={d.cover} type="article">
+  <div class="container">
+    <div style="padding-top:20px">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <a href="/projects/">工作流与作品</a> <span>/</span>
+        <span>{d.title}</span>
+      </nav>
+    </div>
+
+    <div class="detail">
+      <div>
+        <div class="detail__media">
+          <img src={d.cover} alt={`${d.title} 预览图`} width="1200" height="800" />
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="chip-row" style="margin-bottom:10px">
+            <a class="chip" href={`/projects/?type=${d.type}`}>{typeLabels[d.type]}</a>
+            {d.tags.slice(0, 3).map((tag) => (
+              <span class="chip chip--outline">#{tag}</span>
+            ))}
+          </div>
+          <h1>{d.title}</h1>
+          <p class="muted" style="margin-bottom:22px">{d.summary}</p>
+
+          <div class="row" style="margin-bottom:26px">
+            {d.videoUrl && (
+              <a class="btn btn--primary btn--sm" href={d.videoUrl} target="_blank" rel="noopener noreferrer">
+                <ArrowUpRight size={15} stroke-width={1.8} /> 观看演示
+              </a>
+            )}
+            {
+              d.workflowFile && (
+                <a class="btn btn--ghost btn--sm" href={d.workflowFile} download>
+                  <Download size={15} stroke-width={1.8} /> 下载工作流文件
+                </a>
+              )
+            }
+            <CopyButton text={d.summary} label="复制说明" copiedLabel="已复制" />
+          </div>
+
+          {
+            project.body && project.body.trim().length > 0 && (
+              <div class="panel">
+                <div class="panel__title"><span>创作说明与使用注意事项</span></div>
+                <div class="prose">
+                  <Content />
+                </div>
+              </div>
+            )
+          }
+
+          {
+            relatedPrompts.length > 0 && (
+              <section style="margin-top:36px">
+                <h2 style="font-size:1.1rem">用到的提示词</h2>
+                <div class="grid grid--cards" style="margin-top:14px">
+                  {relatedPrompts.map((prompt) => (
+                    <PromptCard prompt={prompt} model={modelIndex.get(prompt.data.model)} />
+                  ))}
+                </div>
+              </section>
+            )
+          }
+
+          <div class="row" style="margin-top:30px">
+            <a class="btn btn--ghost btn--sm" href="/projects/">
+              <ArrowLeft size={15} stroke-width={1.8} /> 返回作品列表
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="detail__side">
+        <div class="panel">
+          <div class="panel__title"><span>条目信息</span></div>
+          <dl class="facts">
+            <div><dt>类型</dt><dd>{typeLabels[d.type]}</dd></div>
+            <div>
+              <dt>发布日期</dt>
+              <dd>
+                <span class="row" style="gap:5px;justify-content:flex-end">
+                  <Calendar size={13} stroke-width={1.8} /> {formatDate(d.date)}
+                </span>
+              </dd>
+            </div>
+            <div><dt>关联模型</dt><dd>{relatedModels.length} 个</dd></div>
+            <div><dt>关联提示词</dt><dd>{relatedPrompts.length} 条</dd></div>
+          </dl>
+        </div>
+
+        {
+          relatedModels.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>相关模型</span></div>
+              <div class="link-list">
+                {relatedModels.map((model) => (
+                  <a href={`/models/${model!.data.slug}/`}>
+                    <Boxes size={15} stroke-width={1.7} /> {model!.data.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {
+          relatedArticles.length > 0 && (
+            <div class="panel">
+              <div class="panel__title"><span>配套教程</span></div>
+              <div class="link-list">
+                {relatedArticles.map((article) => (
+                  <a href={`/articles/${article.id}/`}>
+                    <FileText size={15} stroke-width={1.7} /> {article.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        <div class="panel">
+          <div class="panel__title"><span>继续探索</span></div>
+          <div class="link-list">
+            <a href={`/prompts/?model=${d.models[0] ?? ''}`}>看同模型的提示词</a>
+            <a href="/articles/">读技术文章</a>
+            <a href="/videos/">看视频教程</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

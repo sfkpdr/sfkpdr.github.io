@@ -1,0 +1,56 @@
+[
+  {
+    "id": "model-review",
+    "name": "开源模型实测",
+    "description": "真实测试记录：显存占用、出图质量、速度与翻车点",
+    "order": 1
+  },
+  {
+    "id": "local-deploy",
+    "name": "本地 AI 部署",
+    "description": "本地环境搭建、依赖安装与运行方式",
+    "order": 2
+  },
+  {
+    "id": "comfyui",
+    "name": "ComfyUI 教程",
+    "description": "节点、工作流与插件配置的实操记录",
+    "order": 3
+  },
+  {
+    "id": "image-tips",
+    "name": "AI 生图技巧",
+    "description": "提示词写法、参数调优与画面控制",
+    "order": 4
+  },
+  {
+    "id": "video",
+    "name": "AI 视频制作",
+    "description": "视频模型使用、镜头设计与成片流程",
+    "order": 5
+  },
+  {
+    "id": "prompt-engineering",
+    "name": "提示词工程",
+    "description": "结构化提示词、模板复用与效果对比",
+    "order": 6
+  },
+  {
+    "id": "troubleshooting",
+    "name": "故障排查",
+    "description": "报错、崩溃、显存不足等问题的定位与解决",
+    "order": 7
+  },
+  {
+    "id": "automation",
+    "name": "自动化创作",
+    "description": "批量生成、脚本与流水线自动化",
+    "order": 8
+  },
+  {
+    "id": "notes",
+    "name": "创作随笔",
+    "description": "学习方法、工具选择与创作思考",
+    "order": 9
+  }
+]

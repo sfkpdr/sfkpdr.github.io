@@ -1,0 +1,190 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Github from '../components/GithubIcon.astro';
+import MapPin from '@lucide/astro/icons/map-pin';
+import Mail from '@lucide/astro/icons/mail';
+import Terminal from '@lucide/astro/icons/terminal';
+import ImageIcon from '@lucide/astro/icons/image';
+import VideoIcon from '@lucide/astro/icons/video';
+import Workflow from '@lucide/astro/icons/workflow';
+import Printer from '@lucide/astro/icons/printer';
+import Feather from '@lucide/astro/icons/feather';
+import { site, taskCategories } from '../lib/content';
+
+const skills = [
+  {
+    icon: Workflow,
+    title: 'ComfyUI 工作流',
+    items: ['节点连接与调试', '模型加载与显存控制', '报错定位', '工作流封装与复用'],
+  },
+  {
+    icon: ImageIcon,
+    title: 'AI 生图',
+    items: ['文生图 / 图生图', 'ControlNet 构图控制', '局部重绘与改图', '风格与角色一致性'],
+  },
+  {
+    icon: VideoIcon,
+    title: 'AI 视频',
+    items: ['Wan 系列视频模型', 'LTX 系列', '镜头与运动提示词', '图生视频流程'],
+  },
+  {
+    icon: Feather,
+    title: 'AI 漫剧与内容',
+    items: ['角色设定与三视图', '多场景生成', '画面风格统一', '提示词工程'],
+  },
+];
+
+const timeline = [
+  {
+    title: '自学 AIGC 内容制作',
+    when: '2025 年 2 月 — 至今',
+    desc: '系统学习 ComfyUI 工作流搭建、AI 生图与 AI 视频，边学边把跑通的流程沉淀成提示词与工作流。',
+  },
+  {
+    title: '辅警 · 厦门高崎边检站',
+    when: '2024 年 9 月 — 2025 年 2 月',
+    desc: '纪律部队经历，强化执行力和应急处理能力。',
+  },
+  {
+    title: '仓储管理 · 深圳贞观实业有限公司',
+    when: '2017 — 2024',
+    desc: '长期负责仓库全流程管理，养成了对流程、细节和可追溯性的要求——现在做工作流也一样。',
+  },
+  {
+    title: '仓库管理员 · 厦门信和达有限公司',
+    when: '2013 — 2017',
+    desc: '规范化企业环境中的工作习惯与团队协作。',
+  },
+];
+---
+
+<BaseLayout
+  title="关于我"
+  description="杨生（杨孔穗），AIGC 内容创作者，专注 ComfyUI 工作流、开源生图与视频模型的本地实践。"
+>
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a> <span>/</span> <span>关于我</span>
+      </nav>
+      <h1>关于我</h1>
+      <p>
+        这个站不是一个作品陈列柜，而是一个工作台：跑通的流程留下来，跑不通的过程也写下来。
+      </p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="about-grid" style="padding:34px 0 72px">
+      <div>
+        <div class="prose" style="max-width:none">
+          <h2 style="margin-top:0">我是杨生</h2>
+          <p>
+            2025 年初从传统行业转向 AIGC，零基础自学 AI 工具，主要折腾
+            <strong>ComfyUI、开源生图模型与视频模型</strong>。到现在为止，能独立搭起文生图、图生图、
+            ControlNet 控制、图生视频的完整流程，也在做 AI 漫剧的角色设定与场景统一。
+          </p>
+          <p>
+            做这个站的直接原因很简单：学到的东西散在聊天记录、截图和本地文件夹里，
+            过两个月自己都找不回来。所以我把它们整理成<strong>提示词 + 效果图 + 模型资料 + 复盘文章</strong>，
+            每条提示词都配着它自己生成的那张图，谁打开都能直接用。
+          </p>
+
+          <h2>这个站里有什么</h2>
+          <ul>
+            {taskCategories.slice(0, 6).map((category) => (
+              <li>
+                <a href={`/prompts/?category=${category.id}`}>{category.name}</a>：{category.description}
+              </li>
+            ))}
+          </ul>
+          <p>
+            除了提示词，还有模型库（能力边界、显存要求、许可证）、技术文章（部署与排错）、
+            视频教程和可下载的 ComfyUI 工作流。它们之间互相链接，可以顺着一条线索一路走下去。
+          </p>
+
+          <h2>我坚持的几条做法</h2>
+          <ul>
+            <li>只写自己跑过的参数。没实测过的条目，标注「未实测」，不编测试数据。</li>
+            <li>模型许可证以官方仓库为准，区分「代码开源」与「权重开放」，不混着说。</li>
+            <li>提示词与效果图一一对应，不拿别人的图充自己的结果。</li>
+          </ul>
+
+          <h2>经历</h2>
+          <ul class="timeline">
+            {timeline.map((item) => (
+              <li>
+                <h4>{item.title}</h4>
+                <div class="when">{item.when}</div>
+                <p>{item.desc}</p>
+              </li>
+            ))}
+          </ul>
+
+          <h2>技能栈</h2>
+          <div class="grid grid--2" style="margin-top:18px">
+            {
+              skills.map((group) => {
+                const SkillIcon = group.icon;
+                return (
+                  <div class="about-card">
+                    <h3 class="row" style="gap:8px">
+                      <SkillIcon size={16} stroke-width={1.8} style="color:var(--wood)" />
+                      {group.title}
+                    </h3>
+                    <ul>
+                      {group.items.map((item) => (
+                        <li>· {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })
+            }
+          </div>
+
+          <h2>联系</h2>
+          <p>
+            想交流提示词、工作流或者指出站内资料的问题，可以在 GitHub 上提 issue，
+            也可以通过公众号「AI时代的人」找到我。
+          </p>
+        </div>
+      </div>
+
+      <aside class="about-side">
+        <div class="about-card">
+          <h3>杨生（杨孔穗）</h3>
+          <ul>
+            <li><MapPin size={14} stroke-width={1.8} /> {site.location}</li>
+            <li><Terminal size={14} stroke-width={1.8} /> AIGC 内容创作者</li>
+            <li><Feather size={14} stroke-width={1.8} /> 公众号「AI时代的人」</li>
+            <li>
+              <Github size={14} />
+              <a href={site.repo} target="_blank" rel="noopener noreferrer">{site.githubUser}</a>
+            </li>
+            {site.email && (
+              <li>
+                <Mail size={14} stroke-width={1.8} />
+                <a href={`mailto:${site.email}`}>{site.email}</a>
+              </li>
+            )}
+          </ul>
+        </div>
+
+        <div class="about-card no-print">
+          <h3>快速入口</h3>
+          <ul>
+            <li><a href="/prompts/">提示词库</a></li>
+            <li><a href="/models/">模型库</a></li>
+            <li><a href="/articles/">技术文章</a></li>
+            <li><a href="/projects/">工作流与作品</a></li>
+          </ul>
+        </div>
+
+        <button class="btn btn--ghost btn--sm no-print" type="button" onclick="window.print()">
+          <Printer size={15} stroke-width={1.8} /> 打印 / 存为 PDF
+        </button>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

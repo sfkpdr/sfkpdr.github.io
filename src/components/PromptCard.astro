@@ -1,0 +1,68 @@
+---
+import CopyButton from './CopyButton.astro';
+import Check from '@lucide/astro/icons/circle-check';
+import type { Prompt, Model } from '../lib/content';
+import { categoryName, excerpt } from '../lib/content';
+
+interface Props {
+  prompt: Prompt;
+  model?: Model;
+  eager?: boolean;
+}
+
+const { prompt, model, eager = false } = Astro.props;
+const d = prompt.data;
+const isSample = d.tags.includes('示例');
+---
+
+<article
+  class="card prompt-card"
+  data-item
+  data-id={prompt.id}
+  data-f-model={d.model}
+  data-f-category={d.category}
+  data-f-tags={d.tags.join('|')}
+  data-f-tested={d.tested ? '1' : '0'}
+  data-title={d.title}
+  data-sort={String(d.updated.valueOf())}
+  data-search={`${d.title} ${model?.data.name ?? d.model} ${categoryName(d.category)} ${d.tags.join(' ')}`}
+>
+  <a class="prompt-card__media" href={`/prompts/${prompt.id}/`} tabindex="-1" aria-hidden="true">
+    <img
+      src={d.image}
+      alt={`${d.title} · ${model?.data.name ?? d.model} 生成效果图`}
+      width="800"
+      height="600"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+  </a>
+
+  <div class="prompt-card__badges">
+    {d.tested && (
+      <span class="badge badge--moss"><Check size={12} stroke-width={2.2} /> 已实测</span>
+    )}
+    {isSample && <span class="badge badge--sample">示例占位</span>}
+  </div>
+
+  <div class="prompt-card__body">
+    <span class="prompt-card__model">{model?.data.name ?? d.model} · {categoryName(d.category)}</span>
+    <h3 class="prompt-card__title">
+      <a href={`/prompts/${prompt.id}/`}>{d.title}</a>
+    </h3>
+    <p class="prompt-card__excerpt">{excerpt(d.prompt, 88)}</p>
+
+    <div class="prompt-card__foot">
+      <div class="prompt-card__tags">
+        {d.tags.filter((t) => t !== '示例').slice(0, 2).map((tag) => <span class="chip">{tag}</span>)}
+      </div>
+      <CopyButton text={d.prompt} label="复制" copiedLabel="已复制" />
+    </div>
+  </div>
+</article>
+
+<style>
+  .prompt-card__media img {
+    background: var(--linen-deep);
+  }
+</style>

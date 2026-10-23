@@ -1,0 +1,67 @@
+---
+import Copy from '@lucide/astro/icons/copy';
+
+interface Props {
+  text: string;
+  label?: string;
+  copiedLabel?: string;
+  variant?: 'default' | 'primary';
+  block?: boolean;
+  class?: string;
+}
+
+const {
+  text,
+  label = '复制提示词',
+  copiedLabel = '已复制',
+  variant = 'default',
+  block = false,
+  class: className = '',
+} = Astro.props;
+---
+
+<span class:list={['copy-wrap', block && 'copy-wrap--block']} data-copy-wrap>
+  <button
+    class:list={['copy-btn', variant === 'primary' && 'copy-btn--primary', block && 'btn--block', className]}
+    type="button"
+    data-copy={text}
+    data-copied-label={copiedLabel}
+    aria-label={label}
+  >
+    <Copy size={15} stroke-width={1.8} />
+    <span data-copy-label>{label}</span>
+  </button>
+</span>
+
+<style>
+  .copy-wrap {
+    display: inline-flex;
+  }
+
+  .copy-wrap--block {
+    display: flex;
+    width: 100%;
+  }
+
+  .copy-btn--primary {
+    background: var(--walnut);
+    border-color: var(--walnut);
+    color: #fdf9f2;
+  }
+
+  .copy-btn--primary:hover {
+    background: var(--walnut-soft);
+    border-color: var(--walnut-soft);
+    color: #fff;
+  }
+
+  .copy-btn--primary[data-state='copied'] {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: #fbfaf6;
+  }
+
+  .copy-wrap :global(.manual-copy textarea) {
+    font-size: 0.82rem;
+  }
+</style>

@@ -1,0 +1,91 @@
+---
+import Github from './GithubIcon.astro';
+import Rss from '@lucide/astro/icons/rss';
+import Smartphone from '@lucide/astro/icons/smartphone';
+import Mail from '@lucide/astro/icons/mail';
+import ExternalLink from '@lucide/astro/icons/external-link';
+import { site } from '../lib/content';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand" href="/">
+          <span class="brand__mark" aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7h18M5 7v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V7" />
+              <path d="M8 3h8l1 4H7l1-4Z" />
+              <path d="M9.5 11.5h5M9.5 15.5h3" />
+            </svg>
+          </span>
+          <span class="brand__text">{site.brand}<small>PERSONAL AI PRACTICE LIBRARY</small></span>
+        </a>
+        <p>
+          用一个创作者的工作台，记录开源模型、实测提示词与踩过的坑。所有内容都是自己跑过的流程，图片与提示词一一对应。
+        </p>
+        <a class="btn btn--ghost btn--sm" href={site.repo} target="_blank" rel="noopener noreferrer">
+          <Github size={15} /> GitHub 仓库
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>内容</h4>
+        <ul>
+          <li><a href="/prompts/">提示词库</a></li>
+          <li><a href="/models/">模型库</a></li>
+          <li><a href="/articles/">技术文章</a></li>
+          <li><a href="/videos/">视频教程</a></li>
+          <li><a href="/projects/">工作流与作品</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>关于</h4>
+        <ul>
+          <li><a href="/about/">关于我</a></li>
+          <li><a href="/search/">全站搜索</a></li>
+          <li>
+            <a href="/rss.xml"><Rss size={14} stroke-width={1.8} /> RSS 订阅</a>
+          </li>
+          <li>
+            <a href={site.repo} target="_blank" rel="noopener noreferrer">
+              <Github size={14} /> 源码仓库
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>维护</h4>
+        <ul>
+          <li>
+            <a href="/admin/"><Smartphone size={14} stroke-width={1.8} /> 手机端上传管理</a>
+          </li>
+          <li>
+            <a href="/license-notes/">资源来源与许可证说明</a>
+          </li>
+          <li>
+            <a href={`${site.repo}/blob/main/README.md`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={14} stroke-width={1.8} /> 使用说明
+            </a>
+          </li>
+          {site.email && (
+            <li>
+              <a href={`mailto:${site.email}`}><Mail size={14} stroke-width={1.8} /> {site.email}</a>
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {year} {site.author} · 内容采用 CC BY-NC-SA 4.0 授权，转载请注明出处。</p>
+      <p class="footer-legal">
+        站内提及的模型、代码与权重版权归各自作者所有，许可证以官方仓库声明为准，本站不对商用授权作任何担保。
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,54 @@
+---
+import Boxes from '@lucide/astro/icons/boxes';
+import Shield from '@lucide/astro/icons/shield';
+import FileText from '@lucide/astro/icons/file-text';
+import type { Model } from '../lib/content';
+import { categoryName } from '../lib/content';
+
+interface Props {
+  model: Model;
+  promptCount?: number;
+}
+
+const { model, promptCount = 0 } = Astro.props;
+const d = model.data;
+---
+
+<article
+  class="card model-card"
+  data-item
+  data-id={d.slug}
+  data-f-tasks={d.tasks.join('|')}
+  data-f-runtimes={d.runtimes.join('|')}
+  data-f-license={d.license}
+  data-title={d.name}
+  data-sort={String(d.updated.valueOf())}
+  data-search={`${d.name} ${d.developer} ${d.summary} ${d.tasks.map((t) => categoryName(t)).join(' ')}`}
+>
+  <div class="model-card__head">
+    <span class="model-card__logo"><Boxes size={19} stroke-width={1.7} /></span>
+    <div style="min-width:0">
+      <h3 class="card__title" style="margin-bottom:2px">
+        <a href={`/models/${d.slug}/`}>{d.name}</a>
+      </h3>
+      <p class="meta" style="margin:0">{d.developer}</p>
+    </div>
+  </div>
+
+  <div class="model-card__body">
+    <p class="model-card__desc">{d.summary}</p>
+
+    <div class="chip-row">
+      {d.tasks.slice(0, 3).map((t) => <span class="chip chip--outline">{categoryName(t)}</span>)}
+    </div>
+
+    <div class="model-card__foot">
+      <span class="row" style="gap:6px">
+        <Shield size={13} stroke-width={1.8} /> {d.license}
+      </span>
+      <span class="row" style="gap:6px">
+        <FileText size={13} stroke-width={1.8} /> {promptCount} 条提示词
+      </span>
+    </div>
+  </div>
+</article>
